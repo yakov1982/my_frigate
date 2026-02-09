@@ -1180,6 +1180,34 @@ class LicensePlateProcessingMixin:
 
         return rep["plate"], rep["conf"], rep["char_confidences"], rep["area"]
 
+    @staticmethod
+    def _looks_like_regex(pattern: str) -> bool:
+        """Return True when a configured plate pattern appears to be regex."""
+        return any(char in pattern for char in ".^$*+?{}[]\\|()")
+
+    def _plate_pattern_matches(self, pattern: str, plate: str) -> bool:
+        """Match a detected plate against a configured pattern."""
+        if self._looks_like_regex(pattern):
+            return re.fullmatch(pattern, plate) is not None
+
+        return (
+            pattern == plate
+            or Levenshtein.distance(pattern, plate) <= self.lpr_config.match_distance
+        )
+
+    def _get_plate_match_label(
+        self, configured_plates: dict[str, list[str]] | None, plate: str
+    ) -> str | None:
+        """Return first matching label for a plate map."""
+        if not configured_plates:
+            return None
+
+        for label, patterns in configured_plates.items():
+            if any(self._plate_pattern_matches(pattern, plate) for pattern in patterns):
+                return label
+
+        return None
+
     def _generate_plate_event(self, camera: str, plate: str, plate_score: float) -> str:
         """Generate a unique ID for a plate event based on camera and text."""
         now = datetime.datetime.now().timestamp()
@@ -1575,27 +1603,39 @@ class LicensePlateProcessingMixin:
                 self.camera_current_cars[camera] = []
             self.camera_current_cars[camera].append(id)
 
-        # Determine subLabel based on known plates, use regex matching
-        # Default to the detected plate, use label name if there's a match
-        sub_label = None
+        # Match against known, whitelist, and blacklist plate books.
+        known_plate_label = None
+        whitelist_label = None
+        blacklist_label = None
+
         try:
-            sub_label = next(
-                (
-                    label
-                    for label, plates_list in self.lpr_config.known_plates.items()
-                    if any(
-                        re.match(f"^{plate}$", rep_plate)
-                        or Levenshtein.distance(plate, rep_plate)
-                        <= self.lpr_config.match_distance
-                        for plate in plates_list
-                    )
-                ),
-                None,
+            known_plate_label = self._get_plate_match_label(
+                self.lpr_config.known_plates, rep_plate
             )
-        except re.error:
+            whitelist_label = self._get_plate_match_label(
+                self.lpr_config.whitelist_plates, rep_plate
+            )
+            blacklist_label = self._get_plate_match_label(
+                self.lpr_config.blacklist_plates, rep_plate
+            )
+        except re.error as exc:
             logger.error(
-                f"{camera}: Invalid regex in known plates configuration: {self.lpr_config.known_plates}"
+                f"{camera}: Invalid regex in LPR plate matching configuration: {exc}"
             )
+
+        plate_status = "none"
+        plate_status_label = None
+
+        # Blacklist should always win if a plate appears in both lists.
+        if blacklist_label is not None:
+            plate_status = "blacklist"
+            plate_status_label = blacklist_label
+        elif whitelist_label is not None:
+            plate_status = "whitelist"
+            plate_status_label = whitelist_label
+
+        # Preserve known plate behavior, but fall back to list label if available.
+        sub_label = known_plate_label if known_plate_label is not None else plate_status_label
 
         # If it's a known plate, publish to sub_label
         if sub_label is not None:
@@ -1611,6 +1651,8 @@ class LicensePlateProcessingMixin:
                     "type": TrackedObjectUpdateTypesEnum.lpr,
                     "name": sub_label,
                     "plate": rep_plate,
+                    "plate_status": plate_status,
+                    "plate_status_label": plate_status_label,
                     "score": rep_conf,
                     "id": id,
                     "camera": camera,
@@ -1620,6 +1662,19 @@ class LicensePlateProcessingMixin:
         )
         self.sub_label_publisher.publish(
             (id, "recognized_license_plate", rep_plate, rep_conf),
+            EventMetadataTypeEnum.attribute.value,
+        )
+        self.sub_label_publisher.publish(
+            (id, "license_plate_status", plate_status, rep_conf),
+            EventMetadataTypeEnum.attribute.value,
+        )
+        self.sub_label_publisher.publish(
+            (
+                id,
+                "license_plate_status_label",
+                plate_status_label,
+                rep_conf if plate_status_label is not None else None,
+            ),
             EventMetadataTypeEnum.attribute.value,
         )
 

@@ -140,18 +140,36 @@ class CameraState:
 
                 # draw the bounding boxes on the frame
                 box = obj["box"]
-                text = (
-                    obj["sub_label"][0]
-                    if (
-                        obj.get("sub_label") and is_label_printable(obj["sub_label"][0])
-                    )
-                    else obj.get("recognized_license_plate", [None])[0]
-                    if (
-                        obj.get("recognized_license_plate")
-                        and obj["recognized_license_plate"][0]
-                    )
-                    else obj["label"]
-                )
+                recognized_plate = None
+                if (
+                    obj.get("recognized_license_plate")
+                    and obj["recognized_license_plate"][0]
+                ):
+                    recognized_plate = obj["recognized_license_plate"][0]
+
+                plate_status = None
+                if obj.get("license_plate_status") and obj["license_plate_status"][0]:
+                    plate_status = obj["license_plate_status"][0]
+
+                plate_status_label = None
+                if (
+                    obj.get("license_plate_status_label")
+                    and obj["license_plate_status_label"][0]
+                ):
+                    plate_status_label = obj["license_plate_status_label"][0]
+
+                if recognized_plate:
+                    # Always include base object label and plate for operator readability.
+                    text = f"{obj['label']} {recognized_plate}"
+                    if plate_status and plate_status != "none":
+                        status_text = plate_status.upper()
+                        if plate_status_label:
+                            status_text = f"{status_text}:{plate_status_label}"
+                        text = f"{text} [{status_text}]"
+                elif obj.get("sub_label") and is_label_printable(obj["sub_label"][0]):
+                    text = obj["sub_label"][0]
+                else:
+                    text = obj["label"]
                 draw_box_with_label(
                     frame_copy,
                     box[0],
@@ -326,6 +344,10 @@ class CameraState:
                 "path_data": [],
                 "recognized_license_plate": None,
                 "recognized_license_plate_score": None,
+                "license_plate_status": None,
+                "license_plate_status_score": None,
+                "license_plate_status_label": None,
+                "license_plate_status_label_score": None,
             }
             new_obj.thumbnail_data = thumbnail_data
             tracked_objects[id].thumbnail_data = thumbnail_data
@@ -405,6 +427,9 @@ class CameraState:
             if not obj.false_positive:
                 label = object_type
                 sub_label = None
+                recognized_license_plate = None
+                license_plate_status = None
+                license_plate_status_label = None
 
                 if obj.obj_data.get("sub_label"):
                     if (
@@ -416,6 +441,19 @@ class CameraState:
                         label = f"{object_type}-verified"
                         sub_label = obj.obj_data["sub_label"][0]
 
+                if obj.obj_data.get("recognized_license_plate"):
+                    recognized_license_plate = obj.obj_data.get(
+                        "recognized_license_plate"
+                    )[0]
+
+                if obj.obj_data.get("license_plate_status"):
+                    license_plate_status = obj.obj_data.get("license_plate_status")[0]
+
+                if obj.obj_data.get("license_plate_status_label"):
+                    license_plate_status_label = obj.obj_data.get(
+                        "license_plate_status_label"
+                    )[0]
+
                 camera_activity["objects"].append(
                     {
                         "id": obj.obj_data["id"],
@@ -425,6 +463,9 @@ class CameraState:
                         "ratio": obj.obj_data["ratio"],
                         "score": obj.obj_data["score"],
                         "sub_label": sub_label,
+                        "recognized_license_plate": recognized_license_plate,
+                        "license_plate_status": license_plate_status,
+                        "license_plate_status_label": license_plate_status_label,
                         "current_zones": obj.current_zones,
                     }
                 )

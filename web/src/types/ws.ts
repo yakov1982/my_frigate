@@ -6,7 +6,7 @@ type FrigateObjectState = {
   frame_time: number;
   snapshot_time: number;
   label: string;
-  sub_label: string | null;
+  sub_label: string | [string, number] | null;
   top_score: number;
   false_positive: boolean;
   start_time: number;
@@ -18,6 +18,9 @@ type FrigateObjectState = {
   region: [number, number, number, number];
   current_zones: string[];
   entered_zones: string[];
+  recognized_license_plate?: [string, number] | null;
+  license_plate_status?: [string, number] | null;
+  license_plate_status_label?: [string, number] | null;
   thumbnail: string | null;
   has_snapshot: boolean;
   has_clip: boolean;
@@ -49,6 +52,9 @@ export type ObjectType = {
   ratio: number;
   score: number;
   sub_label: string;
+  recognized_license_plate?: string;
+  license_plate_status?: string;
+  license_plate_status_label?: string;
 };
 
 export type AudioDetection = {
@@ -114,6 +120,8 @@ export type TrackedObjectUpdateReturnType = {
   description?: string;
   name?: string;
   plate?: string;
+  plate_status?: string;
+  plate_status_label?: string;
   score?: number;
   timestamp?: number;
   text?: string;

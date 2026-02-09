@@ -29,6 +29,10 @@ def should_update_db(prev_event: Event, current_event: Event) -> bool:
             or prev_event["velocity_angle"] != current_event["velocity_angle"]
             or prev_event["recognized_license_plate"]
             != current_event["recognized_license_plate"]
+            or prev_event.get("license_plate_status")
+            != current_event.get("license_plate_status")
+            or prev_event.get("license_plate_status_label")
+            != current_event.get("license_plate_status_label")
             or prev_event["path_data"] != current_event["path_data"]
         ):
             return True
@@ -44,6 +48,16 @@ def should_update_state(prev_event: Event, current_event: Event) -> bool:
         return True
 
     if prev_event["sub_label"] != current_event["sub_label"]:
+        return True
+
+    if prev_event.get("license_plate_status") != current_event.get(
+        "license_plate_status"
+    ):
+        return True
+
+    if prev_event.get("license_plate_status_label") != current_event.get(
+        "license_plate_status_label"
+    ):
         return True
 
     if set(prev_event["current_zones"]) != set(current_event["current_zones"]):
@@ -235,6 +249,22 @@ class EventProcessor(threading.Thread):
                 ][0]
                 event[Event.data]["recognized_license_plate_score"] = event_data[
                     "recognized_license_plate"
+                ][1]
+
+            if event_data.get("license_plate_status") is not None:
+                event[Event.data]["license_plate_status"] = event_data[
+                    "license_plate_status"
+                ][0]
+                event[Event.data]["license_plate_status_score"] = event_data[
+                    "license_plate_status"
+                ][1]
+
+            if event_data.get("license_plate_status_label") is not None:
+                event[Event.data]["license_plate_status_label"] = event_data[
+                    "license_plate_status_label"
+                ][0]
+                event[Event.data]["license_plate_status_label_score"] = event_data[
+                    "license_plate_status_label"
                 ][1]
 
             (

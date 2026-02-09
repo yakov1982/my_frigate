@@ -271,6 +271,14 @@ class LicensePlateRecognitionConfig(FrigateBaseModel):
     known_plates: Optional[Dict[str, List[str]]] = Field(
         default={}, title="Known plates to track (strings or regular expressions)."
     )
+    whitelist_plates: Optional[Dict[str, List[str]]] = Field(
+        default={},
+        title="Whitelist plates to track (strings or regular expressions).",
+    )
+    blacklist_plates: Optional[Dict[str, List[str]]] = Field(
+        default={},
+        title="Blacklist plates to track (strings or regular expressions).",
+    )
     enhancement: int = Field(
         default=0,
         title="Amount of contrast adjustment and denoising to apply to license plate images before recognition.",

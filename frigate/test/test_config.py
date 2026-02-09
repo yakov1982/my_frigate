@@ -68,6 +68,22 @@ class TestConfig(unittest.TestCase):
         assert frigate_config.detectors["cpu"].type == DetectorTypeEnum.cpu
         assert frigate_config.detectors["cpu"].model.width == 320
 
+    def test_lpr_white_and_black_lists(self):
+        config = deep_merge(
+            {
+                "lpr": {
+                    "enabled": True,
+                    "whitelist_plates": {"Residents": ["ABC1234"]},
+                    "blacklist_plates": {"Watchlist": ["BAD-[0-9]{3}"]},
+                }
+            },
+            self.minimal,
+        )
+
+        frigate_config = FrigateConfig(**config)
+        assert frigate_config.lpr.whitelist_plates["Residents"] == ["ABC1234"]
+        assert frigate_config.lpr.blacklist_plates["Watchlist"] == ["BAD-[0-9]{3}"]
+
     @patch("frigate.detectors.detector_config.load_labels")
     def test_detector_custom_model_path(self, mock_labels):
         mock_labels.return_value = {}

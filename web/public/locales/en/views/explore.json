@@ -142,6 +142,10 @@
       "label": "Score"
     },
     "recognizedLicensePlate": "Recognized License Plate",
+    "licensePlateStatus": {
+      "whitelist": "Whitelisted",
+      "blacklist": "Blacklisted"
+    },
     "attributes": "Classification Attributes",
     "estimatedSpeed": "Estimated Speed",
     "objects": "Objects",

@@ -14,7 +14,7 @@ When a plate is recognized, the details are:
 - Viewable in the Tracked Object Details pane in Explore (sub labels and recognized license plates).
 - Filterable through the More Filters menu in Explore.
 - Published via the `frigate/events` MQTT topic as a `sub_label` ([known](#matching)) or `recognized_license_plate` (unknown) for the `car` or `motorcycle` tracked object.
-- Published via the `frigate/tracked_object_update` MQTT topic with `name` (if [known](#matching)) and `plate`.
+- Published via the `frigate/tracked_object_update` MQTT topic with `name` (if [known](#matching)), `plate`, and list-tracking metadata (`plate_status`, `plate_status_label`) when configured.
 
 ## Model Requirements
 
@@ -93,9 +93,12 @@ Fine-tune the LPR feature using these optional parameters at the global level of
 - **`known_plates`**: List of strings or regular expressions that assign custom a `sub_label` to `car` and `motorcycle` objects when a recognized plate matches a known value.
   - These labels appear in the UI, filters, and notifications.
   - Unknown plates are still saved but are added to the `recognized_license_plate` field rather than the `sub_label`.
+- **`whitelist_plates`**: List of strings or regular expressions grouped by name. Matching plates are tagged as `license_plate_status: whitelist` and optionally include the matching group name in `license_plate_status_label`.
+- **`blacklist_plates`**: List of strings or regular expressions grouped by name. Matching plates are tagged as `license_plate_status: blacklist` and optionally include the matching group name in `license_plate_status_label`.
+  - If a plate matches both lists, `blacklist` takes precedence.
 - **`match_distance`**: Allows for minor variations (missing/incorrect characters) when matching a detected plate to a known plate.
   - For example, setting `match_distance: 1` allows a plate `ABCDE` to match `ABCBE` or `ABCD`.
-  - This parameter will _not_ operate on known plates that are defined as regular expressions. You should define the full string of your plate in `known_plates` in order to use `match_distance`.
+  - This parameter will _not_ operate on entries that are defined as regular expressions. You should define the full string of your plate in `known_plates`, `whitelist_plates`, or `blacklist_plates` in order to use `match_distance`.
 
 ### Image Enhancement
 
@@ -156,6 +159,14 @@ lpr:
       - "[S5]LL 1234" # Matches both SLL 1234 and 5LL 1234
     Work Trucks:
       - "EMP-[0-9]{3}[A-Z]" # Matches plates like EMP-123A, EMP-456Z
+  whitelist_plates:
+    Resident:
+      - "ABC-1234"
+      - "ABC-I234"
+  blacklist_plates:
+    Watchlist:
+      - "ZZZ-9999"
+      - "BAD-[0-9]{3}"
 ```
 
 ```yaml

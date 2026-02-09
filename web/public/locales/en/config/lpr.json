@@ -28,6 +28,12 @@
     "known_plates": {
       "label": "Known plates to track (strings or regular expressions)."
     },
+    "whitelist_plates": {
+      "label": "Whitelist plates to track (strings or regular expressions)."
+    },
+    "blacklist_plates": {
+      "label": "Blacklist plates to track (strings or regular expressions)."
+    },
     "enhancement": {
       "label": "Amount of contrast adjustment and denoising to apply to license plate images before recognition."
     },

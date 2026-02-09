@@ -173,6 +173,16 @@ class TrackedObject:
                         "recognized_license_plate_score": obj_data.get(
                             "recognized_license_plate_score"
                         ),
+                        "license_plate_status": obj_data.get("license_plate_status"),
+                        "license_plate_status_score": obj_data.get(
+                            "license_plate_status_score"
+                        ),
+                        "license_plate_status_label": obj_data.get(
+                            "license_plate_status_label"
+                        ),
+                        "license_plate_status_label_score": obj_data.get(
+                            "license_plate_status_label_score"
+                        ),
                     }
                     thumb_update = True
                 else:
@@ -410,6 +420,10 @@ class TrackedObject:
             "velocity_angle": self.velocity_angle,
             "path_data": self.path_data.copy(),
             "recognized_license_plate": self.obj_data.get("recognized_license_plate"),
+            "license_plate_status": self.obj_data.get("license_plate_status"),
+            "license_plate_status_label": self.obj_data.get(
+                "license_plate_status_label"
+            ),
         }
 
         return event

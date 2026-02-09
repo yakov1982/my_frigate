@@ -33,6 +33,7 @@ import { MdAutoAwesome } from "react-icons/md";
 import { isPWA } from "@/utils/isPWA";
 import { isInIframe } from "@/utils/isIFrame";
 import { GenAISummaryDialog } from "../overlay/chip/GenAISummaryChip";
+import Chip from "../indicators/Chip";
 
 type DetailStreamProps = {
   reviewItems?: ReviewSegment[];
@@ -567,6 +568,14 @@ function EventList({
 
   const label =
     event.sub_label || getTranslatedLabel(event.label, event.data.type);
+  const { t } = useTranslation("views/explore");
+  const licensePlateStatusText =
+    event.data?.license_plate_status &&
+    event.data.license_plate_status !== "none"
+      ? event.data?.license_plate_status_label
+        ? `${t(`details.licensePlateStatus.${event.data.license_plate_status}`)}: ${event.data.license_plate_status_label}`
+        : t(`details.licensePlateStatus.${event.data.license_plate_status}`)
+      : null;
 
   const handleObjectSelect = (event: Event | undefined) => {
     if (event) {
@@ -655,6 +664,18 @@ function EventList({
                         {event.data.recognized_license_plate}
                       </Link>
                     </div>
+                    {licensePlateStatusText && (
+                      <Chip
+                        className={cn(
+                          "px-1.5 py-0 text-[10px] uppercase tracking-wide",
+                          event.data.license_plate_status === "blacklist"
+                            ? "bg-danger/20 text-danger"
+                            : "bg-success/20 text-success",
+                        )}
+                      >
+                        {licensePlateStatusText}
+                      </Chip>
+                    )}
                   </>
                 )}
               </div>

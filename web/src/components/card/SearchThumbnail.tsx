@@ -75,7 +75,13 @@ export default function SearchThumbnail({
 
     if (!searchResult.sub_label) {
       if (hasRecognizedPlate) {
-        return `(${searchResult.data.recognized_license_plate})`;
+        const status = searchResult.data.license_plate_status;
+        const statusLabel = searchResult.data.license_plate_status_label;
+        const statusText =
+          status && status !== "none"
+            ? `${status.toUpperCase()}${statusLabel ? `:${statusLabel}` : ""}`
+            : "";
+        return `(${searchResult.data.recognized_license_plate}${statusText ? ` · ${statusText}` : ""})`;
       }
 
       return undefined;

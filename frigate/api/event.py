@@ -434,6 +434,10 @@ def events_explore(
                         "path_data",
                         "recognized_license_plate",
                         "recognized_license_plate_score",
+                        "license_plate_status",
+                        "license_plate_status_score",
+                        "license_plate_status_label",
+                        "license_plate_status_label_score",
                     ]
                 },
                 "event_count": label_counts[event.label],
@@ -820,6 +824,10 @@ def events_search(
                 "path_data",
                 "recognized_license_plate",
                 "recognized_license_plate_score",
+                "license_plate_status",
+                "license_plate_status_score",
+                "license_plate_status_label",
+                "license_plate_status_label_score",
             ]
         }
 
