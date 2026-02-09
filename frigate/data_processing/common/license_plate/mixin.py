@@ -1597,6 +1597,9 @@ class LicensePlateProcessingMixin:
                 f"{camera}: Invalid regex in known plates configuration: {self.lpr_config.known_plates}"
             )
 
+        # Determine whitelist/blacklist status
+        plate_list_status = self._check_plate_list_status(rep_plate, camera)
+
         # If it's a known plate, publish to sub_label
         if sub_label is not None:
             self.sub_label_publisher.publish(
@@ -1623,6 +1626,35 @@ class LicensePlateProcessingMixin:
             EventMetadataTypeEnum.attribute.value,
         )
 
+        # Publish LPR alert for operator display
+        # Encode the vehicle/plate snapshot for frontend display
+        snapshot_b64 = None
+        try:
+            if dedicated_lpr:
+                frame_bgr = cv2.cvtColor(frame, cv2.COLOR_YUV2BGR_I420)
+            else:
+                frame_bgr = cv2.cvtColor(frame, cv2.COLOR_YUV2BGR_I420)
+            _, encoded_img = cv2.imencode(".jpg", frame_bgr)
+            snapshot_b64 = base64.b64encode(encoded_img).decode("ASCII")
+        except Exception as e:
+            logger.warning(f"{camera}: Failed to encode LPR snapshot: {e}")
+
+        self.requestor.send_data(
+            "lpr_alert",
+            json.dumps(
+                {
+                    "id": id,
+                    "camera": camera,
+                    "plate": rep_plate,
+                    "known_name": sub_label,
+                    "score": rep_conf,
+                    "list_status": plate_list_status,
+                    "timestamp": current_time,
+                    "snapshot": snapshot_b64,
+                }
+            ),
+        )
+
         # save the best snapshot for dedicated lpr cams not using frigate+
         if (
             dedicated_lpr
@@ -1637,6 +1669,59 @@ class LicensePlateProcessingMixin:
                 (base64.b64encode(encoded_img).decode("ASCII"), id, camera),
                 EventMetadataTypeEnum.save_lpr_snapshot.value,
             )
+
+    def _check_plate_list_status(self, plate: str, camera: str) -> str:
+        """Check if a plate is in the whitelist, blacklist, or unknown.
+
+        Args:
+            plate: The recognized license plate string.
+            camera: The camera name.
+
+        Returns:
+            str: 'whitelist', 'blacklist', or 'unknown'
+        """
+        # Check blacklist first (higher priority)
+        for pattern in self.lpr_config.blacklist:
+            try:
+                if re.match(f"^{pattern}$", plate):
+                    logger.info(
+                        f"{camera}: Plate '{plate}' matched BLACKLIST pattern '{pattern}'"
+                    )
+                    return "blacklist"
+            except re.error as e:
+                logger.warning(
+                    f"{camera}: Invalid regex in blacklist '{pattern}': {e}"
+                )
+            if Levenshtein.distance(pattern, plate) <= self.lpr_config.match_distance:
+                logger.info(
+                    f"{camera}: Plate '{plate}' matched BLACKLIST entry '{pattern}' (fuzzy)"
+                )
+                return "blacklist"
+
+        # Check whitelist
+        for pattern in self.lpr_config.whitelist:
+            try:
+                if re.match(f"^{pattern}$", plate):
+                    logger.debug(
+                        f"{camera}: Plate '{plate}' matched WHITELIST pattern '{pattern}'"
+                    )
+                    return "whitelist"
+            except re.error as e:
+                logger.warning(
+                    f"{camera}: Invalid regex in whitelist '{pattern}': {e}"
+                )
+            if Levenshtein.distance(pattern, plate) <= self.lpr_config.match_distance:
+                logger.debug(
+                    f"{camera}: Plate '{plate}' matched WHITELIST entry '{pattern}' (fuzzy)"
+                )
+                return "whitelist"
+
+        # Not in any list
+        if self.lpr_config.alert_on_unknown:
+            logger.info(
+                f"{camera}: Plate '{plate}' is UNKNOWN (not in whitelist or blacklist)"
+            )
+        return "unknown"
 
     def handle_request(self, topic, request_data) -> dict[str, Any] | None:
         return
