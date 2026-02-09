@@ -50,11 +50,11 @@ def list_documents(
 
 @router.post("", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
 def create_document(
-    title: Annotated[str, Form(...)],
-    doc_type: Annotated[str, Form("generic")],
-    reg_number: Annotated[str | None, Form(None)],
-    approvers: Annotated[str, Form("")],
-    file: Annotated[UploadFile | None, File(None)] = None,
+    title: Annotated[str, Form()],
+    doc_type: Annotated[str, Form()] = "generic",
+    reg_number: Annotated[str | None, Form()] = None,
+    approvers: Annotated[str, Form()] = "",
+    file: Annotated[UploadFile | None, File()] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> DocumentOut:
@@ -187,7 +187,7 @@ def download_version(
 @router.post("/{doc_id}/approve", response_model=DocumentOut)
 def approve(
     doc_id: int,
-    comment: Annotated[str | None, Form(None)] = None,
+    comment: Annotated[str | None, Form()] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> DocumentOut:
@@ -211,7 +211,7 @@ def approve(
 @router.post("/{doc_id}/reject", response_model=DocumentOut)
 def reject(
     doc_id: int,
-    comment: Annotated[str | None, Form(None)] = None,
+    comment: Annotated[str | None, Form()] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> DocumentOut:
