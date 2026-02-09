@@ -19,6 +19,7 @@ from frigate.api import (
     classification,
     event,
     export,
+    health,
     media,
     notification,
     preview,
@@ -123,6 +124,7 @@ def create_fastapi_app(
     app.include_router(classification.router)
     app.include_router(review.router)
     app.include_router(main_app.router)
+    app.include_router(health.router)
     app.include_router(preview.router)
     app.include_router(notification.router)
     app.include_router(export.router)
