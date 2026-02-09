@@ -15,7 +15,7 @@ from typing import Any, List, Optional, Tuple
 import cv2
 import numpy as np
 from pyclipper import ET_CLOSEDPOLYGON, JT_ROUND, PyclipperOffset
-from rapidfuzz.distance import JaroWinkler, Levenshtein
+from rapidfuzz.distance import JaroWinkler
 from shapely.geometry import Polygon
 
 from frigate.comms.event_metadata_updater import (
@@ -23,6 +23,11 @@ from frigate.comms.event_metadata_updater import (
     EventMetadataTypeEnum,
 )
 from frigate.const import CLIPS_DIR, MODEL_CACHE_DIR
+from frigate.data_processing.common.license_plate.matching import (
+    get_plate_match_label,
+    looks_like_regex,
+    plate_pattern_matches,
+)
 from frigate.embeddings.onnx.lpr_embedding import LPR_EMBEDDING_SIZE
 from frigate.types import TrackedObjectUpdateTypesEnum
 from frigate.util.builtin import EventsPerSecond, InferenceSpeed
@@ -1183,30 +1188,25 @@ class LicensePlateProcessingMixin:
     @staticmethod
     def _looks_like_regex(pattern: str) -> bool:
         """Return True when a configured plate pattern appears to be regex."""
-        return any(char in pattern for char in ".^$*+?{}[]\\|()")
+        return looks_like_regex(pattern)
 
     def _plate_pattern_matches(self, pattern: str, plate: str) -> bool:
         """Match a detected plate against a configured pattern."""
-        if self._looks_like_regex(pattern):
-            return re.fullmatch(pattern, plate) is not None
-
-        return (
-            pattern == plate
-            or Levenshtein.distance(pattern, plate) <= self.lpr_config.match_distance
+        return plate_pattern_matches(
+            pattern,
+            plate,
+            self.lpr_config.match_distance,
         )
 
     def _get_plate_match_label(
         self, configured_plates: dict[str, list[str]] | None, plate: str
     ) -> str | None:
         """Return first matching label for a plate map."""
-        if not configured_plates:
-            return None
-
-        for label, patterns in configured_plates.items():
-            if any(self._plate_pattern_matches(pattern, plate) for pattern in patterns):
-                return label
-
-        return None
+        return get_plate_match_label(
+            configured_plates,
+            plate,
+            self.lpr_config.match_distance,
+        )
 
     def _generate_plate_event(self, camera: str, plate: str, plate_score: float) -> str:
         """Generate a unique ID for a plate event based on camera and text."""
