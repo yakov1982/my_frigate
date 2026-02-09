@@ -1101,3 +1101,229 @@ def delete_classification_model(request: Request, name: str):
         ),
         status_code=200,
     )
+
+
+# License Plate Whitelist/Blacklist APIs
+
+
+@router.get(
+    "/lpr/plates",
+    summary="Get all license plate list entries",
+    description="""Returns all license plate whitelist/blacklist entries.
+    Can be filtered by list_type and camera.""",
+)
+def get_plate_lists(
+    list_type: str = None,
+    camera: str = None,
+):
+    from frigate.models import LicensePlateList
+    
+    query = LicensePlateList.select()
+    
+    if list_type:
+        query = query.where(LicensePlateList.list_type == list_type)
+    
+    if camera:
+        query = query.where(
+            (LicensePlateList.camera == camera) | (LicensePlateList.camera.is_null())
+        )
+    
+    plates = []
+    for plate in query:
+        plates.append({
+            "id": plate.id,
+            "plate": plate.plate,
+            "list_type": plate.list_type,
+            "camera": plate.camera,
+            "description": plate.description,
+            "created_at": plate.created_at.isoformat() if plate.created_at else None,
+            "updated_at": plate.updated_at.isoformat() if plate.updated_at else None,
+        })
+    
+    return JSONResponse(status_code=200, content=plates)
+
+
+@router.post(
+    "/lpr/plates",
+    response_model=GenericResponse,
+    dependencies=[Depends(require_role(["admin"]))],
+    summary="Add a license plate to whitelist/blacklist",
+    description="""Adds a new license plate to the whitelist or blacklist.
+    Returns a success message or an error if the plate already exists.""",
+)
+def add_plate_to_list(body: dict = None):
+    from frigate.models import LicensePlateList
+    
+    json: dict[str, Any] = body or {}
+    plate = json.get("plate", "").upper()
+    list_type = json.get("list_type", "whitelist")
+    camera = json.get("camera")
+    description = json.get("description", "")
+    
+    if not plate:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "Plate number is required."},
+        )
+    
+    if list_type not in ["whitelist", "blacklist"]:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "list_type must be 'whitelist' or 'blacklist'."},
+        )
+    
+    now = datetime.datetime.now()
+    rand_id = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    plate_id = f"plate-{int(now.timestamp())}-{rand_id}"
+    
+    try:
+        LicensePlateList.create(
+            id=plate_id,
+            plate=plate,
+            list_type=list_type,
+            camera=camera,
+            description=description,
+            created_at=now,
+            updated_at=now,
+        )
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": f"Successfully added plate {plate} to {list_type}.",
+                "id": plate_id,
+            },
+        )
+    except Exception as e:
+        logger.error(f"Error adding plate to list: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": "Error adding plate to list."},
+        )
+
+
+@router.put(
+    "/lpr/plates/{plate_id}",
+    response_model=GenericResponse,
+    dependencies=[Depends(require_role(["admin"]))],
+    summary="Update a license plate list entry",
+    description="""Updates an existing license plate list entry.
+    Returns a success message or an error if the plate doesn't exist.""",
+)
+def update_plate_in_list(plate_id: str, body: dict = None):
+    from frigate.models import LicensePlateList
+    
+    try:
+        plate_entry = LicensePlateList.get(LicensePlateList.id == plate_id)
+    except DoesNotExist:
+        return JSONResponse(
+            status_code=404,
+            content={"success": False, "message": "Plate not found."},
+        )
+    
+    json: dict[str, Any] = body or {}
+    
+    if "plate" in json:
+        plate_entry.plate = json["plate"].upper()
+    if "list_type" in json:
+        if json["list_type"] not in ["whitelist", "blacklist"]:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "list_type must be 'whitelist' or 'blacklist'."},
+            )
+        plate_entry.list_type = json["list_type"]
+    if "camera" in json:
+        plate_entry.camera = json["camera"]
+    if "description" in json:
+        plate_entry.description = json["description"]
+    
+    plate_entry.updated_at = datetime.datetime.now()
+    plate_entry.save()
+    
+    return JSONResponse(
+        status_code=200,
+        content={"success": True, "message": "Successfully updated plate."},
+    )
+
+
+@router.delete(
+    "/lpr/plates/{plate_id}",
+    response_model=GenericResponse,
+    dependencies=[Depends(require_role(["admin"]))],
+    summary="Delete a license plate list entry",
+    description="""Deletes a license plate from the whitelist/blacklist.
+    Returns a success message or an error if the plate doesn't exist.""",
+)
+def delete_plate_from_list(plate_id: str):
+    from frigate.models import LicensePlateList
+    
+    try:
+        plate_entry = LicensePlateList.get(LicensePlateList.id == plate_id)
+        plate_entry.delete_instance()
+        
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": "Successfully deleted plate."},
+        )
+    except DoesNotExist:
+        return JSONResponse(
+            status_code=404,
+            content={"success": False, "message": "Plate not found."},
+        )
+    except Exception as e:
+        logger.error(f"Error deleting plate: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": "Error deleting plate."},
+        )
+
+
+@router.get(
+    "/lpr/events",
+    summary="Get license plate detection events",
+    description="""Returns license plate detection events.
+    Can be filtered by plate, camera, list_status, and time range.""",
+)
+def get_plate_events(
+    plate: str = None,
+    camera: str = None,
+    list_status: str = None,
+    start_time: float = None,
+    end_time: float = None,
+    limit: int = 100,
+):
+    from frigate.models import LicensePlateEvent
+    
+    query = LicensePlateEvent.select().order_by(LicensePlateEvent.detected_at.desc())
+    
+    if plate:
+        query = query.where(LicensePlateEvent.plate.contains(plate))
+    
+    if camera:
+        query = query.where(LicensePlateEvent.camera == camera)
+    
+    if list_status:
+        query = query.where(LicensePlateEvent.list_status == list_status)
+    
+    if start_time:
+        query = query.where(LicensePlateEvent.detected_at >= datetime.datetime.fromtimestamp(start_time))
+    
+    if end_time:
+        query = query.where(LicensePlateEvent.detected_at <= datetime.datetime.fromtimestamp(end_time))
+    
+    query = query.limit(limit)
+    
+    events = []
+    for event in query:
+        events.append({
+            "id": event.id,
+            "plate": event.plate,
+            "camera": event.camera,
+            "list_status": event.list_status,
+            "confidence": event.confidence,
+            "detected_at": event.detected_at.isoformat() if event.detected_at else None,
+            "object_id": event.object_id,
+        })
+    
+    return JSONResponse(status_code=200, content=events)
