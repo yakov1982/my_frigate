@@ -473,7 +473,7 @@ def _extract_fps(r_frame_rate: str) -> float | None:
     description=(
         "Probe an ONVIF device to determine capabilities and optionally test available stream URIs. "
         "Query params: host (required), port (default 80), username, password, test (boolean), "
-        "auth_type (basic or digest, default basic)."
+        "auth_type (basic or digest, default digest)."
     ),
 )
 async def onvif_probe(
@@ -483,7 +483,7 @@ async def onvif_probe(
     username: str = Query(""),
     password: str = Query(""),
     test: bool = Query(False),
-    auth_type: str = Query("basic"),  # Add auth_type parameter
+    auth_type: str = Query("digest"),
 ):
     """
     Probe a single ONVIF device to determine capabilities.
@@ -501,7 +501,7 @@ async def onvif_probe(
         username: ONVIF username (optional)
         password: ONVIF password (optional)
         test: run ffprobe on the stream (optional)
-        auth_type: Authentication type - "basic" or "digest" (default "basic")
+        auth_type: Authentication type - "basic" or "digest" (default "digest")
 
     Returns:
         JSON with device capabilities information

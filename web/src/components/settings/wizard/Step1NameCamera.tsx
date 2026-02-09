@@ -120,7 +120,7 @@ export default function Step1NameCamera({
           : "dahua",
       customUrl: wizardData.customUrl || "",
       onvifPort: wizardData.onvifPort ?? 80,
-      useDigestAuth: wizardData.useDigestAuth ?? false,
+      useDigestAuth: wizardData.useDigestAuth ?? true,
     },
     mode: "onChange",
   });

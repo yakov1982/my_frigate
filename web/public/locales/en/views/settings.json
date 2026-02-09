@@ -350,7 +350,15 @@
     "backToSettings": "Back to Camera Settings",
     "streams": {
       "title": "Enable / Disable Cameras",
-      "desc": "Temporarily disable a camera until Frigate restarts. Disabling a camera completely stops Frigate's processing of this camera's streams. Detection, recording, and debugging will be unavailable.<br /> <em>Note: This does not disable go2rtc restreams.</em>"
+      "desc": "Temporarily disable a camera until Frigate restarts. Disabling a camera completely stops Frigate's processing of this camera's streams. Detection, recording, and debugging will be unavailable.<br /> <em>Note: This does not disable go2rtc restreams.</em>",
+      "edit": "Edit camera",
+      "delete": "Delete",
+      "deleteSuccess": "Camera {{name}} has been deleted.",
+      "deleteDialog": {
+        "title": "Delete Camera",
+        "desc": "Are you sure you want to permanently delete the camera <em>{{name}}</em>? This action cannot be undone. Frigate will need to be restarted to apply changes.",
+        "deleting": "Deleting…"
+      }
     },
     "cameraConfig": {
       "add": "Add Camera",
