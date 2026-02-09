@@ -126,3 +126,14 @@ export type TriggerStatus = {
   type: string;
   score: number;
 };
+
+export type LprAlertType = {
+  id: string;
+  camera: string;
+  plate: string;
+  known_name: string | null;
+  score: number;
+  list_status: "whitelist" | "blacklist" | "unknown";
+  timestamp: number;
+  snapshot: string | null;
+};

@@ -440,6 +440,10 @@ export interface FrigateConfig {
 
   lpr: {
     enabled: boolean;
+    whitelist: string[];
+    blacklist: string[];
+    alert_on_unknown: boolean;
+    known_plates: Record<string, string[]>;
   };
 
   logger: {

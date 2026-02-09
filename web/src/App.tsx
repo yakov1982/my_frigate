@@ -28,6 +28,7 @@ const UIPlayground = lazy(() => import("@/pages/UIPlayground"));
 const FaceLibrary = lazy(() => import("@/pages/FaceLibrary"));
 const Classification = lazy(() => import("@/pages/ClassificationModel"));
 const Logs = lazy(() => import("@/pages/Logs"));
+const LprMonitor = lazy(() => import("@/pages/LprMonitor"));
 const AccessDenied = lazy(() => import("@/pages/AccessDenied"));
 
 function App() {
@@ -106,6 +107,7 @@ function DefaultAppView() {
               <Route path="/logs" element={<Logs />} />
               <Route path="/faces" element={<FaceLibrary />} />
               <Route path="/classification" element={<Classification />} />
+              <Route path="/lpr" element={<LprMonitor />} />
               <Route path="/playground" element={<UIPlayground />} />
             </Route>
             <Route path="/unauthorized" element={<AccessDenied />} />

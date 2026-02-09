@@ -260,7 +260,8 @@
       "setPassword": "Установить пароль"
     },
     "appearance": "Внешний вид",
-    "classification": "Распознование"
+    "classification": "Распознование",
+    "lprMonitor": "Монитор номеров"
   },
   "pagination": {
     "label": "пагинация",

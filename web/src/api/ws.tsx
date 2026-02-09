@@ -6,6 +6,7 @@ import {
   FrigateCameraState,
   FrigateEvent,
   FrigateReview,
+  LprAlertType,
   ModelState,
   ToggleableSetting,
   TrackedObjectUpdateReturnType,
@@ -649,5 +650,13 @@ export function useTriggers(): { payload: TriggerStatus } {
   const parsed = payload
     ? JSON.parse(payload as string)
     : { name: "", camera: "", event_id: "", type: "", score: 0 };
+  return { payload: useDeepMemo(parsed) };
+}
+
+export function useLprAlerts(): { payload: LprAlertType | null } {
+  const {
+    value: { payload },
+  } = useWs("lpr_alert", "");
+  const parsed = payload ? JSON.parse(payload as string) : null;
   return { payload: useDeepMemo(parsed) };
 }
