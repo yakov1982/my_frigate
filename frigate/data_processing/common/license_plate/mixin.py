@@ -1201,6 +1201,120 @@ class LicensePlateProcessingMixin:
         )
         return event_id
 
+    def _check_plate_list_status(self, camera: str, plate: str) -> Optional[str]:
+        """
+        Check if a license plate is in the whitelist or blacklist.
+        
+        Args:
+            camera: Camera name
+            plate: License plate text to check
+            
+        Returns:
+            'whitelist' if in whitelist, 'blacklist' if in blacklist, None otherwise
+        """
+        # Check whitelist first
+        if self.lpr_config.whitelist:
+            for pattern in self.lpr_config.whitelist:
+                try:
+                    if re.match(f"^{pattern}$", plate):
+                        return "whitelist"
+                except re.error:
+                    # If regex fails, try exact match
+                    if pattern == plate:
+                        return "whitelist"
+        
+        # Check blacklist
+        if self.lpr_config.blacklist:
+            for pattern in self.lpr_config.blacklist:
+                try:
+                    if re.match(f"^{pattern}$", plate):
+                        return "blacklist"
+                except re.error:
+                    # If regex fails, try exact match
+                    if pattern == plate:
+                        return "blacklist"
+        
+        return None
+
+    def _save_plate_event(
+        self,
+        camera: str,
+        object_id: str,
+        plate: str,
+        confidence: float,
+        list_status: Optional[str],
+        dedicated_lpr: bool,
+    ):
+        """
+        Save license plate detection event to database.
+        
+        Args:
+            camera: Camera name
+            object_id: Object ID
+            plate: License plate text
+            confidence: Detection confidence
+            list_status: Whitelist/blacklist status
+            dedicated_lpr: Whether this is a dedicated LPR camera
+        """
+        try:
+            from frigate.models import LicensePlateEvent
+            
+            now = datetime.datetime.now()
+            event_id = f"{int(now.timestamp())}-{object_id}"
+            
+            # Create or update the event
+            LicensePlateEvent.insert(
+                id=event_id,
+                plate=plate,
+                camera=camera,
+                list_status=list_status,
+                confidence=confidence,
+                detected_at=now,
+                object_id=object_id,
+            ).on_conflict_ignore().execute()
+            
+        except Exception as e:
+            logger.warning(f"{camera}: Error saving license plate event: {e}")
+
+    def _send_lpr_mqtt_notification(
+        self,
+        camera: str,
+        plate: str,
+        list_status: str,
+        confidence: float,
+    ):
+        """
+        Send MQTT notification for whitelist/blacklist match.
+        
+        Args:
+            camera: Camera name
+            plate: License plate text
+            list_status: Whitelist or blacklist status
+            confidence: Detection confidence
+        """
+        try:
+            # Publish to MQTT topic
+            mqtt_payload = json.dumps({
+                "camera": camera,
+                "plate": plate,
+                "list_status": list_status,
+                "confidence": confidence,
+                "timestamp": datetime.datetime.now().isoformat(),
+            })
+            
+            # The MQTT client should be available through the config or a global instance
+            # Publishing to a topic like: frigate/lpr/{camera}/{list_status}
+            topic = f"lpr/{camera}/{list_status}"
+            
+            # Note: MQTT publishing would need to be integrated with the existing MQTT client
+            # For now, we'll log the notification
+            logger.info(
+                f"{camera}: MQTT notification for {list_status} plate: {plate} (confidence: {confidence:.3f})"
+            )
+            
+        except Exception as e:
+            logger.warning(f"{camera}: Error sending MQTT notification: {e}")
+
     def lpr_process(
         self, obj_data: dict[str, Any], frame: np.ndarray, dedicated_lpr: bool = False
     ):
@@ -1575,6 +1689,9 @@ class LicensePlateProcessingMixin:
                 self.camera_current_cars[camera] = []
             self.camera_current_cars[camera].append(id)
 
+        # Check whitelist/blacklist status
+        list_status = self._check_plate_list_status(camera, rep_plate)
+        
         # Determine subLabel based on known plates, use regex matching
         # Default to the detected plate, use label name if there's a match
         sub_label = None
@@ -1602,7 +1719,24 @@ class LicensePlateProcessingMixin:
             self.sub_label_publisher.publish(
                 (id, sub_label, rep_conf), EventMetadataTypeEnum.sub_label.value
             )
+        
+        # Log and publish whitelist/blacklist status
+        if list_status:
+            logger.info(
+                f"{camera}: License plate {rep_plate} matched {list_status} (confidence: {rep_conf:.3f})"
+            )
+            self.sub_label_publisher.publish(
+                (id, f"{list_status}_plate", rep_plate, rep_conf),
+                EventMetadataTypeEnum.attribute.value,
+            )
+            
+            # Send MQTT notification if enabled
+            if self.lpr_config.enable_notifications:
+                self._send_lpr_mqtt_notification(camera, rep_plate, list_status, rep_conf)
 
+        # Save license plate event to database
+        self._save_plate_event(camera, id, rep_plate, rep_conf, list_status, dedicated_lpr)
+        
         # always publish to recognized_license_plate field
         self.requestor.send_data(
             "tracked_object_update",
@@ -1615,6 +1749,7 @@ class LicensePlateProcessingMixin:
                     "id": id,
                     "camera": camera,
                     "timestamp": start,
+                    "list_status": list_status,
                 }
             ),
         )
