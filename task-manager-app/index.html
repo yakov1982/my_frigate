@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Менеджер Задач</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="header-title">📝 Мои Задачи</h1>
+            <p class="header-subtitle">Организуйте свою работу эффективно</p>
+        </header>
+
+        <div class="task-input-section">
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="taskInput" 
+                    class="task-input" 
+                    placeholder="Добавьте новую задачу..."
+                    autocomplete="off"
+                >
+                <button id="addTaskBtn" class="btn-add">
+                    <span class="btn-icon">+</span>
+                    Добавить
+                </button>
+            </div>
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">Все</button>
+                <button class="filter-tab" data-filter="active">Активные</button>
+                <button class="filter-tab" data-filter="completed">Завершённые</button>
+            </div>
+        </div>
+
+        <div class="tasks-container">
+            <ul id="taskList" class="task-list"></ul>
+            <div id="emptyState" class="empty-state">
+                <div class="empty-icon">📋</div>
+                <p>Пока нет задач</p>
+                <small>Добавьте новую задачу, чтобы начать</small>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">Всего:</span>
+                <span id="totalTasks" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Активных:</span>
+                <span id="activeTasks" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Завершено:</span>
+                <span id="completedTasks" class="stat-value">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

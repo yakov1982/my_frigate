@@ -1,0 +1,28 @@
+{
+  "name": "task-manager-app",
+  "version": "1.0.0",
+  "description": "Современное веб-приложение для управления задачами с красивым UI",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 8080 -o",
+    "dev": "npx live-server --port=8080"
+  },
+  "keywords": [
+    "task-manager",
+    "todo",
+    "productivity",
+    "javascript",
+    "vanilla-js"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/task-manager-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/task-manager-app/issues"
+  },
+  "homepage": "https://github.com/yourusername/task-manager-app#readme"
+}
