@@ -48,6 +48,29 @@ export default function SearchThumbnail({
     [searchResult],
   );
 
+  const plateListTag = useMemo(() => {
+    const type = searchResult.data.license_plate_list_type;
+    const name = searchResult.data.license_plate_list;
+
+    if (!type) {
+      return undefined;
+    }
+
+    const prefix = type === "blacklist" ? "BL" : type === "whitelist" ? "WL" : type;
+    return `${prefix}${name ? `:${name}` : ""}`;
+  }, [searchResult]);
+
+  const chipClassName = useMemo(() => {
+    const type = searchResult.data.license_plate_list_type;
+    if (type === "blacklist") {
+      return "bg-red-600 bg-gradient-to-br from-red-500 to-red-700";
+    }
+    if (type === "whitelist") {
+      return "bg-green-600 bg-gradient-to-br from-green-500 to-green-700";
+    }
+    return "bg-gray-500 bg-gradient-to-br from-gray-400 to-gray-500";
+  }, [searchResult]);
+
   const objectLabel = useMemo(() => {
     if (!config) {
       return searchResult.label;
@@ -75,7 +98,7 @@ export default function SearchThumbnail({
 
     if (!searchResult.sub_label) {
       if (hasRecognizedPlate) {
-        return `(${searchResult.data.recognized_license_plate})`;
+        return `(${searchResult.data.recognized_license_plate})${plateListTag ? ` [${plateListTag}]` : ""}`;
       }
 
       return undefined;
@@ -90,7 +113,7 @@ export default function SearchThumbnail({
     }
 
     return `(${searchResult.sub_label})`;
-  }, [config, hasRecognizedPlate, searchResult]);
+  }, [config, hasRecognizedPlate, searchResult, plateListTag]);
 
   return (
     <div
@@ -130,7 +153,7 @@ export default function SearchThumbnail({
               <TooltipTrigger asChild>
                 <div className="mx-3 pb-1 text-sm text-white">
                   <Chip
-                    className={`z-0 flex items-center justify-between gap-1 space-x-1 bg-gray-500 bg-gradient-to-br from-gray-400 to-gray-500 text-xs capitalize`}
+                    className={`z-0 flex items-center justify-between gap-1 space-x-1 text-xs capitalize ${chipClassName}`}
                     onClick={() => onClick(searchResult, false, true)}
                   >
                     {getIconForLabel(

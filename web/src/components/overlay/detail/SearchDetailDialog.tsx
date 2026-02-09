@@ -1418,6 +1418,29 @@ function ObjectDetailsTab({
                   {search.data.recognized_license_plate}{" "}
                   {recognizedLicensePlateScore &&
                     ` (${recognizedLicensePlateScore}%)`}
+                  {search.data.license_plate_list_type && (
+                    <span
+                      className={cn(
+                        "ml-1 rounded-md px-2 py-0.5 text-xs font-medium text-white",
+                        search.data.license_plate_list_type === "blacklist" &&
+                          "bg-red-700",
+                        search.data.license_plate_list_type === "whitelist" &&
+                          "bg-green-700",
+                        search.data.license_plate_list_type !== "blacklist" &&
+                          search.data.license_plate_list_type !== "whitelist" &&
+                          "bg-muted-foreground",
+                      )}
+                    >
+                      {search.data.license_plate_list_type === "blacklist"
+                        ? "BLACKLIST"
+                        : search.data.license_plate_list_type === "whitelist"
+                          ? "WHITELIST"
+                          : search.data.license_plate_list_type}
+                      {search.data.license_plate_list
+                        ? `:${search.data.license_plate_list}`
+                        : ""}
+                    </span>
+                  )}
                   {isAdmin && (
                     <Tooltip>
                       <TooltipTrigger asChild>

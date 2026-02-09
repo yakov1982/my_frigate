@@ -655,6 +655,29 @@ function EventList({
                         {event.data.recognized_license_plate}
                       </Link>
                     </div>
+                    {event.data?.license_plate_list_type && (
+                      <span
+                        className={cn(
+                          "ml-1 rounded-md px-2 py-0.5 text-xs font-medium text-white",
+                          event.data.license_plate_list_type === "blacklist" &&
+                            "bg-red-700",
+                          event.data.license_plate_list_type === "whitelist" &&
+                            "bg-green-700",
+                          event.data.license_plate_list_type !== "blacklist" &&
+                            event.data.license_plate_list_type !== "whitelist" &&
+                            "bg-muted-foreground",
+                        )}
+                      >
+                        {event.data.license_plate_list_type === "blacklist"
+                          ? "BL"
+                          : event.data.license_plate_list_type === "whitelist"
+                            ? "WL"
+                            : event.data.license_plate_list_type}
+                        {event.data.license_plate_list
+                          ? `:${event.data.license_plate_list}`
+                          : ""}
+                      </span>
+                    )}
                   </>
                 )}
               </div>

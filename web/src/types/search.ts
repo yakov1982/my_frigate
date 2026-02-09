@@ -65,6 +65,10 @@ export type SearchResult = {
     path_data: [number[], number][];
     recognized_license_plate?: string;
     recognized_license_plate_score?: number;
+    license_plate_list_type?: "whitelist" | "blacklist" | string;
+    license_plate_list_type_score?: number;
+    license_plate_list?: string;
+    license_plate_list_score?: number;
   };
 };
 

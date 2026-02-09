@@ -270,6 +270,37 @@ function ExploreThumbnailImage({
           onLoad={onImgLoad}
           alt={`${event.label} thumbnail`}
         />
+        {event.data?.recognized_license_plate && (
+          <div
+            className={cn(
+              "absolute left-1 top-1 z-10 rounded-md px-2 py-1 text-xs text-white shadow-sm",
+              event.data.license_plate_list_type === "blacklist" &&
+                "bg-red-700/80",
+              event.data.license_plate_list_type === "whitelist" &&
+                "bg-green-700/80",
+              (!event.data.license_plate_list_type ||
+                (event.data.license_plate_list_type !== "blacklist" &&
+                  event.data.license_plate_list_type !== "whitelist")) &&
+                "bg-black/60",
+            )}
+          >
+            {event.data.recognized_license_plate}
+            {event.data.license_plate_list_type && (
+              <span className="ml-2">
+                [
+                {event.data.license_plate_list_type === "blacklist"
+                  ? "BL"
+                  : event.data.license_plate_list_type === "whitelist"
+                    ? "WL"
+                    : event.data.license_plate_list_type}
+                {event.data.license_plate_list
+                  ? `:${event.data.license_plate_list}`
+                  : ""}
+                ]
+              </span>
+            )}
+          </div>
+        )}
         {isDesktop && (
           <div className="absolute bottom-1 right-1 z-10 rounded-lg bg-black/50 px-2 py-1 text-xs text-white">
             {event.end_time ? (
