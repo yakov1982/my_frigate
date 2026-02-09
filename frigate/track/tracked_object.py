@@ -410,6 +410,8 @@ class TrackedObject:
             "velocity_angle": self.velocity_angle,
             "path_data": self.path_data.copy(),
             "recognized_license_plate": self.obj_data.get("recognized_license_plate"),
+            "license_plate_list_type": self.obj_data.get("license_plate_list_type"),
+            "license_plate_list": self.obj_data.get("license_plate_list"),
         }
 
         return event

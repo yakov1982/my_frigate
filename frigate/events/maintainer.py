@@ -29,6 +29,10 @@ def should_update_db(prev_event: Event, current_event: Event) -> bool:
             or prev_event["velocity_angle"] != current_event["velocity_angle"]
             or prev_event["recognized_license_plate"]
             != current_event["recognized_license_plate"]
+            or prev_event.get("license_plate_list_type")
+            != current_event.get("license_plate_list_type")
+            or prev_event.get("license_plate_list")
+            != current_event.get("license_plate_list")
             or prev_event["path_data"] != current_event["path_data"]
         ):
             return True
@@ -235,6 +239,22 @@ class EventProcessor(threading.Thread):
                 ][0]
                 event[Event.data]["recognized_license_plate_score"] = event_data[
                     "recognized_license_plate"
+                ][1]
+
+            # only overwrite plate list fields in the database if they're set
+            if event_data.get("license_plate_list_type") is not None:
+                event[Event.data]["license_plate_list_type"] = event_data[
+                    "license_plate_list_type"
+                ][0]
+                event[Event.data]["license_plate_list_type_score"] = event_data[
+                    "license_plate_list_type"
+                ][1]
+            if event_data.get("license_plate_list") is not None:
+                event[Event.data]["license_plate_list"] = event_data[
+                    "license_plate_list"
+                ][0]
+                event[Event.data]["license_plate_list_score"] = event_data[
+                    "license_plate_list"
                 ][1]
 
             (

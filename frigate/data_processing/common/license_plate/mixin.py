@@ -1201,6 +1201,64 @@ class LicensePlateProcessingMixin:
         )
         return event_id
 
+    @staticmethod
+    def _normalize_plate_text(text: str) -> str:
+        """Normalize a plate string for matching.
+
+        - Uppercase
+        - Remove spaces
+        """
+        return (text or "").replace(" ", "").upper()
+
+    def _match_plate_in_groups(
+        self, plate: str, groups: dict[str, list[str]] | None
+    ) -> str | None:
+        """Return first matching group name for a plate.
+
+        Supports:
+        - Exact match / fuzzy match (Levenshtein <= match_distance)
+        - Regex patterns (fullmatch)
+        """
+        if not groups:
+            return None
+
+        normalized_plate = self._normalize_plate_text(plate)
+
+        for group_name, patterns in groups.items():
+            if not patterns:
+                continue
+
+            for pattern in patterns:
+                if not pattern:
+                    continue
+
+                # Treat as regex if it looks like one
+                is_regex = pattern.startswith("^") or any(
+                    ch in pattern for ch in ".[]?+*|(){}\\"
+                )
+
+                if is_regex:
+                    try:
+                        if re.fullmatch(pattern, plate) or re.fullmatch(
+                            pattern, normalized_plate
+                        ):
+                            return group_name
+                    except re.error:
+                        logger.error(
+                            f"Invalid regex in LPR plate list '{group_name}': {pattern}"
+                        )
+                        continue
+                else:
+                    normalized_pattern = self._normalize_plate_text(pattern)
+                    if (
+                        normalized_pattern == normalized_plate
+                        or Levenshtein.distance(normalized_pattern, normalized_plate)
+                        <= self.lpr_config.match_distance
+                    ):
+                        return group_name
+
+        return None
+
     def lpr_process(
         self, obj_data: dict[str, Any], frame: np.ndarray, dedicated_lpr: bool = False
     ):
@@ -1602,6 +1660,34 @@ class LicensePlateProcessingMixin:
             self.sub_label_publisher.publish(
                 (id, sub_label, rep_conf), EventMetadataTypeEnum.sub_label.value
             )
+
+        # Determine whitelist/blacklist membership (blacklist takes precedence)
+        list_type: str | None = None
+        list_name: str | None = None
+
+        blacklist_match = self._match_plate_in_groups(
+            rep_plate, getattr(self.lpr_config, "blacklist", None)
+        )
+        if blacklist_match:
+            list_type = "blacklist"
+            list_name = blacklist_match
+        else:
+            whitelist_match = self._match_plate_in_groups(
+                rep_plate, getattr(self.lpr_config, "whitelist", None)
+            )
+            if whitelist_match:
+                list_type = "whitelist"
+                list_name = whitelist_match
+
+        # Publish plate list status as attributes on the event/object
+        self.sub_label_publisher.publish(
+            (id, "license_plate_list_type", list_type, rep_conf if list_type else None),
+            EventMetadataTypeEnum.attribute.value,
+        )
+        self.sub_label_publisher.publish(
+            (id, "license_plate_list", list_name, rep_conf if list_name else None),
+            EventMetadataTypeEnum.attribute.value,
+        )
 
         # always publish to recognized_license_plate field
         self.requestor.send_data(

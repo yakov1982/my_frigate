@@ -140,18 +140,43 @@ class CameraState:
 
                 # draw the bounding boxes on the frame
                 box = obj["box"]
-                text = (
+                sub_label_text = (
                     obj["sub_label"][0]
-                    if (
-                        obj.get("sub_label") and is_label_printable(obj["sub_label"][0])
-                    )
-                    else obj.get("recognized_license_plate", [None])[0]
-                    if (
-                        obj.get("recognized_license_plate")
-                        and obj["recognized_license_plate"][0]
-                    )
-                    else obj["label"]
+                    if (obj.get("sub_label") and is_label_printable(obj["sub_label"][0]))
+                    else None
                 )
+                plate_text = (
+                    obj.get("recognized_license_plate", [None])[0]
+                    if (obj.get("recognized_license_plate") and obj["recognized_license_plate"][0])
+                    else None
+                )
+                list_type = (
+                    obj.get("license_plate_list_type", [None])[0]
+                    if (obj.get("license_plate_list_type") and obj["license_plate_list_type"][0])
+                    else None
+                )
+                list_name = (
+                    obj.get("license_plate_list", [None])[0]
+                    if (obj.get("license_plate_list") and obj["license_plate_list"][0])
+                    else None
+                )
+
+                list_tag = None
+                if list_type == "blacklist":
+                    list_tag = f"BL{f':{list_name}' if list_name else ''}"
+                elif list_type == "whitelist":
+                    list_tag = f"WL{f':{list_name}' if list_name else ''}"
+
+                if plate_text:
+                    text = plate_text
+                    if sub_label_text and sub_label_text != plate_text:
+                        text = f"{text} ({sub_label_text})"
+                    if list_tag:
+                        text = f"{text} [{list_tag}]"
+                elif sub_label_text:
+                    text = sub_label_text
+                else:
+                    text = obj["label"]
                 draw_box_with_label(
                     frame_copy,
                     box[0],
