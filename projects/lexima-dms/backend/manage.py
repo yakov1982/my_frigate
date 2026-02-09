@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 import sys
 
-from lexima_dms.core.config import get_settings
-from lexima_dms.core.security import hash_password
+from lexima_dms.app_core.config import get_settings
+from lexima_dms.app_core.security import hash_password
 from lexima_dms.db.init_db import init_db
 from lexima_dms.db.models import User, UserRole
 from lexima_dms.db.session import db_session

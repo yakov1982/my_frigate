@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
-from lexima_dms.core.config import get_settings
+from lexima_dms.app_core.config import get_settings
 from lexima_dms.db.models import User
 from lexima_dms.db.session import db_session
 

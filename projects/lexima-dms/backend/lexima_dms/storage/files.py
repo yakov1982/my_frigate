@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi import UploadFile
 
-from lexima_dms.core.config import get_settings
+from lexima_dms.app_core.config import get_settings
 
 
 _FILENAME_SAFE_RE = re.compile(r"[^A-Za-z0-9А-Яа-я._ -]+")

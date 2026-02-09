@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from lexima_dms.core.config import get_settings
+from lexima_dms.app_core.config import get_settings
 
 
 def _db_path() -> Path:

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from lexima_dms.api.deps import get_current_user, get_db
 from lexima_dms.api.schemas import Token, UserOut
-from lexima_dms.core.security import create_access_token, verify_password
+from lexima_dms.app_core.security import create_access_token, verify_password
 from lexima_dms.db.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
