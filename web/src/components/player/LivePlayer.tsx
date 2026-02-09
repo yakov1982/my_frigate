@@ -345,7 +345,41 @@ export default function LivePlayer({
 
       {((showStillWithoutActivity && !liveReady) || liveReady) &&
         objects.length > 0 && (
-          <div className="absolute left-0 top-2 z-40">
+          <div className="absolute left-0 top-2 z-40 flex flex-col gap-2">
+            {/* LPR whitelist/blacklist overlay - show plate and vehicle on operator screen */}
+            {objects.some(
+              (obj) => obj.list_status === "whitelist" || obj.list_status === "blacklist",
+            ) && (
+              <div className="flex flex-col gap-1">
+                {objects
+                  .filter(
+                    (obj) =>
+                      obj.list_status === "whitelist" ||
+                      obj.list_status === "blacklist",
+                  )
+                  .map((obj) => (
+                    <Chip
+                      key={obj.id}
+                      className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold ${
+                        obj.list_status === "whitelist"
+                          ? "bg-green-600/90 text-white"
+                          : "bg-red-600/90 text-white"
+                      }`}
+                    >
+                      {obj.list_status === "whitelist" ? (
+                        <span className="text-xs uppercase">
+                          {t("whitelist", { ns: "components/player" })}
+                        </span>
+                      ) : (
+                        <span className="text-xs uppercase">
+                          {t("blacklist", { ns: "components/player" })}
+                        </span>
+                      )}
+                      <span className="font-mono">{obj.plate ?? ""}</span>
+                    </Chip>
+                  ))}
+              </div>
+            )}
             <Tooltip>
               <div className="flex">
                 <TooltipTrigger asChild>

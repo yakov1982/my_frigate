@@ -416,18 +416,22 @@ class CameraState:
                         label = f"{object_type}-verified"
                         sub_label = obj.obj_data["sub_label"][0]
 
-                camera_activity["objects"].append(
-                    {
-                        "id": obj.obj_data["id"],
-                        "label": label,
-                        "stationary": not active,
-                        "area": obj.obj_data["area"],
-                        "ratio": obj.obj_data["ratio"],
-                        "score": obj.obj_data["score"],
-                        "sub_label": sub_label,
-                        "current_zones": obj.current_zones,
-                    }
-                )
+                obj_dict = {
+                    "id": obj.obj_data["id"],
+                    "label": label,
+                    "stationary": not active,
+                    "area": obj.obj_data["area"],
+                    "ratio": obj.obj_data["ratio"],
+                    "score": obj.obj_data["score"],
+                    "sub_label": sub_label,
+                    "current_zones": obj.current_zones,
+                }
+                # Add LPR data for operator overlay (whitelist/blacklist display)
+                if obj.obj_data.get("recognized_license_plate"):
+                    obj_dict["plate"] = obj.obj_data["recognized_license_plate"][0]
+                if obj.obj_data.get("list_status"):
+                    obj_dict["list_status"] = obj.obj_data["list_status"][0]
+                camera_activity["objects"].append(obj_dict)
 
             # if we don't have access to the current frame or
             # if the object's thumbnail is not from the current frame, skip

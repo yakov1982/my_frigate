@@ -1597,10 +1597,45 @@ class LicensePlateProcessingMixin:
                 f"{camera}: Invalid regex in known plates configuration: {self.lpr_config.known_plates}"
             )
 
+        # Determine list_status (whitelist/blacklist) for operator display
+        list_status = None
+        try:
+            def _plate_matches(pattern: str, plate: str) -> bool:
+                """Check if plate matches pattern (same logic as known_plates)."""
+                try:
+                    return bool(re.match(f"^{pattern}$", plate)) or (
+                        Levenshtein.distance(pattern, plate)
+                        <= self.lpr_config.match_distance
+                    )
+                except re.error:
+                    return False
+
+            if self.lpr_config.whitelist:
+                for plate_pattern in self.lpr_config.whitelist:
+                    if _plate_matches(plate_pattern, rep_plate):
+                        list_status = "whitelist"
+                        break
+            if list_status is None and self.lpr_config.blacklist:
+                for plate_pattern in self.lpr_config.blacklist:
+                    if _plate_matches(plate_pattern, rep_plate):
+                        list_status = "blacklist"
+                        break
+        except re.error:
+            logger.error(
+                f"{camera}: Invalid regex in whitelist/blacklist configuration"
+            )
+
         # If it's a known plate, publish to sub_label
         if sub_label is not None:
             self.sub_label_publisher.publish(
                 (id, sub_label, rep_conf), EventMetadataTypeEnum.sub_label.value
+            )
+
+        # Publish list_status for operator overlay (whitelist/blacklist display)
+        if list_status is not None:
+            self.sub_label_publisher.publish(
+                (id, "list_status", list_status, None),
+                EventMetadataTypeEnum.attribute.value,
             )
 
         # always publish to recognized_license_plate field
@@ -1615,6 +1650,7 @@ class LicensePlateProcessingMixin:
                     "id": id,
                     "camera": camera,
                     "timestamp": start,
+                    "list_status": list_status,
                 }
             ),
         )

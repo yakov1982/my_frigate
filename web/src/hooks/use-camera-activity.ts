@@ -4,6 +4,7 @@ import {
   useFrigateEvents,
   useInitialCameraState,
   useMotionActivity,
+  useTrackedObjectUpdate,
 } from "@/api/ws";
 import { CameraConfig, FrigateConfig } from "@/types/frigateConfig";
 import { MotionData, ReviewSegment } from "@/types/review";
@@ -76,6 +77,8 @@ export function useCameraActivity(
   const { payload: detectingMotion } = useMotionActivity(camera.name);
   const { payload: event } = useFrigateEvents();
   const updatedEvent = useDeepMemo(event);
+  const { payload: lprUpdate } = useTrackedObjectUpdate();
+  const memoizedLprUpdate = useDeepMemo(lprUpdate);
 
   const handleSetObjects = useCallback(
     (newObjects: ObjectType[]) => {
@@ -105,23 +108,26 @@ export function useCameraActivity(
         newObjects.splice(updatedEventIndex, 1);
       }
     } else {
-      if (updatedEventIndex === -1) {
-        // add unknown updatedEvent to list if not stationary
-        if (!updatedEvent.after.stationary) {
-          const newActiveObject: ObjectType = {
-            id: updatedEvent.after.id,
-            label: updatedEvent.after.label,
-            stationary: updatedEvent.after.stationary,
-            area: updatedEvent.after.area,
-            ratio: updatedEvent.after.ratio,
-            score: updatedEvent.after.score,
-            sub_label: updatedEvent.after.sub_label?.[0] ?? "",
-          };
-          newObjects = [...(objects ?? []), newActiveObject];
-        }
-      } else {
-        const newObjects = [...(objects ?? [])];
-
+        if (updatedEventIndex === -1) {
+          // add unknown updatedEvent to list if not stationary
+          if (!updatedEvent.after.stationary) {
+            const newActiveObject: ObjectType = {
+              id: updatedEvent.after.id,
+              label: updatedEvent.after.label,
+              stationary: updatedEvent.after.stationary,
+              area: updatedEvent.after.area,
+              ratio: updatedEvent.after.ratio,
+              score: updatedEvent.after.score,
+              sub_label: updatedEvent.after.sub_label?.[0] ?? "",
+              plate: updatedEvent.after.recognized_license_plate?.[0],
+              list_status: updatedEvent.after.list_status?.[0] as
+                | "whitelist"
+                | "blacklist"
+                | undefined,
+            };
+            newObjects = [...(objects ?? []), newActiveObject];
+          }
+        } else {
         let label = updatedEvent.after.label;
 
         if (updatedEvent.after.sub_label) {
@@ -134,14 +140,44 @@ export function useCameraActivity(
           }
         }
 
-        newObjects[updatedEventIndex].label = label;
-        newObjects[updatedEventIndex].stationary =
-          updatedEvent.after.stationary;
+        newObjects[updatedEventIndex] = {
+          ...newObjects[updatedEventIndex],
+          label,
+          stationary: updatedEvent.after.stationary,
+          plate: updatedEvent.after.recognized_license_plate?.[0],
+          list_status: updatedEvent.after.list_status?.[0] as
+            | "whitelist"
+            | "blacklist"
+            | undefined,
+        };
       }
     }
 
     handleSetObjects(newObjects);
   }, [attributeLabels, camera, updatedEvent, objects, handleSetObjects]);
+
+  // handle LPR updates (plate + whitelist/blacklist) for real-time overlay
+  useEffect(() => {
+    if (!memoizedLprUpdate || memoizedLprUpdate.camera !== camera.name) {
+      return;
+    }
+    if (memoizedLprUpdate.type !== "lpr") {
+      return;
+    }
+    const lprObjId = memoizedLprUpdate.id;
+    const lprPlate = memoizedLprUpdate.plate;
+    const lprListStatus = memoizedLprUpdate.list_status;
+    const objIndex = objects?.findIndex((o) => o.id === lprObjId) ?? -1;
+    if (objIndex >= 0 && (lprPlate || lprListStatus)) {
+      const newObjects = [...(objects ?? [])];
+      if (lprPlate) newObjects[objIndex].plate = lprPlate;
+      if (lprListStatus)
+        newObjects[objIndex].list_status = lprListStatus as
+          | "whitelist"
+          | "blacklist";
+      handleSetObjects(newObjects);
+    }
+  }, [camera, memoizedLprUpdate, objects, handleSetObjects]);
 
   // determine if camera is offline
 

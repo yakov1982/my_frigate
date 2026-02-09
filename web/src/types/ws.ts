@@ -27,6 +27,8 @@ type FrigateObjectState = {
   attributes: {
     [key: string]: number;
   };
+  recognized_license_plate?: [string, number];
+  list_status?: [string, number | null];
 };
 
 export interface FrigateReview {
@@ -49,6 +51,8 @@ export type ObjectType = {
   ratio: number;
   score: number;
   sub_label: string;
+  plate?: string;
+  list_status?: "whitelist" | "blacklist";
 };
 
 export type AudioDetection = {
@@ -117,6 +121,7 @@ export type TrackedObjectUpdateReturnType = {
   score?: number;
   timestamp?: number;
   text?: string;
+  list_status?: "whitelist" | "blacklist";
 } | null;
 
 export type TriggerStatus = {

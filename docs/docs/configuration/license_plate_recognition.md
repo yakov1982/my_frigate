@@ -97,6 +97,13 @@ Fine-tune the LPR feature using these optional parameters at the global level of
   - For example, setting `match_distance: 1` allows a plate `ABCDE` to match `ABCBE` or `ABCD`.
   - This parameter will _not_ operate on known plates that are defined as regular expressions. You should define the full string of your plate in `known_plates` in order to use `match_distance`.
 
+### Whitelist and Blacklist (Operator Display)
+
+- **`whitelist`**: List of license plate strings or regular expressions. When a recognized plate matches the whitelist, it is displayed on the Live view with a green badge for the operator.
+- **`blacklist`**: List of license plate strings or regular expressions. When a recognized plate matches the blacklist, it is displayed on the Live view with a red badge for the operator.
+- Plates matching whitelist or blacklist are shown prominently on the operator screen with the vehicle's license plate number.
+- Uses the same matching logic as `known_plates` (regex and `match_distance` for fuzzy matching).
+
 ### Image Enhancement
 
 - **`enhancement`**: A value between 0 and 10 that adjusts the level of image enhancement applied to captured license plates before they are processed for recognition. This preprocessing step can sometimes improve accuracy but may also have the opposite effect.
@@ -156,6 +163,14 @@ lpr:
       - "[S5]LL 1234" # Matches both SLL 1234 and 5LL 1234
     Work Trucks:
       - "EMP-[0-9]{3}[A-Z]" # Matches plates like EMP-123A, EMP-456Z
+  # Whitelist: plates shown with green badge on operator Live view
+  whitelist:
+    - "ABC-1234"
+    - "EMP-[0-9]{3}[A-Z]"
+  # Blacklist: plates shown with red badge on operator Live view
+  blacklist:
+    - "SUS-1234"
+    - "ALERT-[0-9]+"
 ```
 
 ```yaml

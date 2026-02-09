@@ -1,4 +1,6 @@
 {
+  "whitelist": "Белый список",
+  "blacklist": "Чёрный список",
   "noRecordingsFoundForThisTime": "Не найдено ни одной записи",
   "noPreviewFound": "Предпросмотр не найден",
   "submitFrigatePlus": {
