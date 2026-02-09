@@ -162,3 +162,26 @@ class Trigger(Model):
 
     class Meta:
         primary_key = CompositeKey("camera", "name")
+
+
+class LicensePlateList(Model):
+    """Model for storing whitelist/blacklist license plates."""
+    id = CharField(null=False, primary_key=True, max_length=30)
+    plate = CharField(max_length=20, index=True)
+    list_type = CharField(max_length=10, index=True)  # 'whitelist' or 'blacklist'
+    camera = CharField(max_length=20, index=True, null=True)  # null means all cameras
+    description = CharField(max_length=200, null=True)
+    created_at = DateTimeField()
+    updated_at = DateTimeField()
+
+
+class LicensePlateEvent(Model):
+    """Model for storing license plate detection events."""
+    id = CharField(null=False, primary_key=True, max_length=30)
+    plate = CharField(max_length=20, index=True)
+    camera = CharField(max_length=20, index=True)
+    list_status = CharField(max_length=10, null=True)  # 'whitelist', 'blacklist', or null
+    confidence = FloatField()
+    thumbnail = TextField(null=True)
+    detected_at = DateTimeField()
+    object_id = CharField(max_length=30, null=True)  # Link to tracked object if available
