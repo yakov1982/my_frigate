@@ -22,7 +22,12 @@ from .api import RealTimeProcessorApi
 try:
     from tflite_runtime.interpreter import Interpreter
 except ModuleNotFoundError:
-    from tensorflow.lite.python.interpreter import Interpreter
+    try:
+        from tensorflow.lite.python.interpreter import Interpreter
+    except ModuleNotFoundError:  # pragma: no cover
+        # Optional dependency. If neither tflite_runtime nor tensorflow is installed,
+        # keep the module importable (e.g. for unit tests / minimal installs).
+        Interpreter = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +55,12 @@ class BirdRealTimeProcessor(RealTimeProcessorApi):
             "bird.tflite": f"{GITHUB_RAW_ENDPOINT}/google-coral/test_data/master/mobilenet_v2_1.0_224_inat_bird_quant.tflite",
             "birdmap.txt": f"{GITHUB_RAW_ENDPOINT}/google-coral/test_data/master/inat_bird_labels.txt",
         }
+
+        if Interpreter is None:
+            logger.warning(
+                "Bird classification unavailable. Install 'tflite_runtime' or 'tensorflow' to enable it."
+            )
+            return
 
         if not all(
             os.path.exists(os.path.join(download_path, n))
@@ -81,6 +92,12 @@ class BirdRealTimeProcessor(RealTimeProcessorApi):
             logger.error(f"Failed to download {path}: {e}")
 
     def __build_detector(self) -> None:
+        if Interpreter is None:
+            logger.warning(
+                "Bird classification unavailable. Install 'tflite_runtime' or 'tensorflow' to enable it."
+            )
+            return
+
         # Suppress TFLite delegate creation messages that bypass Python logging
         with suppress_stderr_during("tflite_interpreter_init"):
             self.interpreter = Interpreter(

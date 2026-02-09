@@ -32,7 +32,12 @@ from .api import RealTimeProcessorApi
 try:
     from tflite_runtime.interpreter import Interpreter
 except ModuleNotFoundError:
-    from tensorflow.lite.python.interpreter import Interpreter
+    try:
+        from tensorflow.lite.python.interpreter import Interpreter
+    except ModuleNotFoundError:  # pragma: no cover
+        # Optional dependency. If neither tflite_runtime nor tensorflow is installed,
+        # keep the module importable (e.g. for unit tests / minimal installs).
+        Interpreter = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -73,10 +78,12 @@ class CustomStateClassificationProcessor(RealTimeProcessorApi):
         self.__build_detector()
 
     def __build_detector(self) -> None:
-        try:
-            from tflite_runtime.interpreter import Interpreter
-        except ModuleNotFoundError:
-            from tensorflow.lite.python.interpreter import Interpreter
+        if Interpreter is None:
+            self.interpreter = None
+            self.tensor_input_details = None
+            self.tensor_output_details = None
+            self.labelmap = {}
+            return
 
         model_path = os.path.join(self.model_dir, "model.tflite")
         labelmap_path = os.path.join(self.model_dir, "labelmap.txt")
@@ -379,6 +386,13 @@ class CustomObjectClassificationProcessor(RealTimeProcessorApi):
         self.__build_detector()
 
     def __build_detector(self) -> None:
+        if Interpreter is None:
+            self.interpreter = None
+            self.tensor_input_details = None
+            self.tensor_output_details = None
+            self.labelmap = {}
+            return
+
         model_path = os.path.join(self.model_dir, "model.tflite")
         labelmap_path = os.path.join(self.model_dir, "labelmap.txt")
 

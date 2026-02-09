@@ -4,9 +4,23 @@ from enum import Enum
 from multiprocessing.managers import SyncManager
 from multiprocessing.sharedctypes import Synchronized
 
-import sherpa_onnx
+from typing import Any
 
-from frigate.data_processing.real_time.whisper_online import FasterWhisperASR
+try:
+    import sherpa_onnx  # type: ignore
+
+    SherpaOnlineRecognizer = sherpa_onnx.OnlineRecognizer
+except ModuleNotFoundError:  # pragma: no cover
+    # Optional dependency used for some audio transcription backends.
+    # Keep imports lightweight so unit tests/dev installs don't require it.
+    sherpa_onnx = None  # type: ignore[assignment]
+    SherpaOnlineRecognizer = Any
+
+try:
+    from frigate.data_processing.real_time.whisper_online import FasterWhisperASR
+except (ModuleNotFoundError, ImportError):  # pragma: no cover
+    # Optional dependency chain (e.g. librosa) for audio transcription.
+    FasterWhisperASR = Any  # type: ignore[misc,assignment]
 
 
 class DataProcessorMetrics:
@@ -64,4 +78,4 @@ class PostProcessDataEnum(str, Enum):
     tracked_object = "tracked_object"
 
 
-AudioTranscriptionModel = FasterWhisperASR | sherpa_onnx.OnlineRecognizer | None
+AudioTranscriptionModel = FasterWhisperASR | SherpaOnlineRecognizer | None

@@ -17,7 +17,12 @@ from .base_embedding import BaseEmbedding
 try:
     from tflite_runtime.interpreter import Interpreter
 except ModuleNotFoundError:
-    from tensorflow.lite.python.interpreter import Interpreter
+    try:
+        from tensorflow.lite.python.interpreter import Interpreter
+    except ModuleNotFoundError:  # pragma: no cover
+        # Optional dependency. If neither tflite_runtime nor tensorflow is installed,
+        # keep the module importable (e.g. for unit tests / minimal installs).
+        Interpreter = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +64,11 @@ class FaceNetEmbedding(BaseEmbedding):
 
     def _load_model_and_utils(self):
         if self.runner is None:
+            if Interpreter is None:
+                raise RuntimeError(
+                    "FaceNetEmbedding requires 'tflite_runtime' or 'tensorflow' to be installed."
+                )
+
             if self.downloader:
                 self.downloader.wait_for_download()
 
