@@ -440,6 +440,8 @@ export interface FrigateConfig {
 
   lpr: {
     enabled: boolean;
+    whitelist?: Record<string, string[]>;
+    blacklist?: Record<string, string[]>;
   };
 
   logger: {

@@ -492,6 +492,17 @@ export default function EnrichmentsSettingsView({
                 </SelectGroup>
               </SelectContent>
             </Select>
+
+            <div className="pt-2">
+              <Button
+                asChild
+                variant="secondary"
+                disabled={!enrichmentsSettings.face.enabled}
+                aria-label="Manage face library"
+              >
+                <Link to="/faces">Управление людьми (библиотека лиц)</Link>
+              </Button>
+            </div>
           </div>
 
           <Separator className="my-2 flex bg-secondary" />
@@ -537,6 +548,11 @@ export default function EnrichmentsSettingsView({
                   {t("button.enabled", { ns: "common" })}
                 </Label>
               </div>
+            </div>
+            <div className="pt-2">
+              <Button asChild variant="secondary" aria-label="Manage plate library">
+                <Link to="/plates">Управление авто (база номеров)</Link>
+              </Button>
             </div>
           </div>
 

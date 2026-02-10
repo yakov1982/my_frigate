@@ -307,18 +307,35 @@ export default function GeneralSettings({ className }: GeneralSettingsProps) {
                   </Link>
                 </>
               )}
-              {isAdmin && isMobile && config?.face_recognition.enabled && (
-                <>
-                  <Link to="/faces">
-                    <MenuItem
-                      className="flex w-full items-center p-2 text-sm"
-                      aria-label={t("menu.faceLibrary")}
-                    >
-                      <LuScanFace className="mr-2 size-4" />
-                      <span>{t("menu.faceLibrary")}</span>
-                    </MenuItem>
-                  </Link>
-                </>
+              {isAdmin && config?.face_recognition.enabled && (
+                <Link to="/faces">
+                  <MenuItem
+                    className={
+                      isDesktop
+                        ? "cursor-pointer"
+                        : "flex w-full items-center p-2 text-sm"
+                    }
+                    aria-label={t("menu.faceLibrary")}
+                  >
+                    <LuScanFace className="mr-2 size-4" />
+                    <span>{t("menu.faceLibrary")}</span>
+                  </MenuItem>
+                </Link>
+              )}
+              {isAdmin && (
+                <Link to="/plates">
+                  <MenuItem
+                    className={
+                      isDesktop
+                        ? "cursor-pointer"
+                        : "flex w-full items-center p-2 text-sm"
+                    }
+                    aria-label="Plate Library"
+                  >
+                    <LuList className="mr-2 size-4" />
+                    <span>База номеров</span>
+                  </MenuItem>
+                </Link>
               )}
               {isAdmin && isMobile && (
                 <>
