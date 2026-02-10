@@ -260,6 +260,53 @@
     "empty": "No recognized objects yet.",
     "failedToLoad": "Failed to load recognitions.",
     "noPhoto": "No photo",
+    "actions": {
+      "refresh": "Refresh",
+      "jumpToTop": "Jump to top",
+      "openInExplore": "Open in Explore",
+      "openSnapshot": "Open snapshot",
+      "openClip": "Open clip"
+    },
+    "filters": {
+      "searchPlaceholder": "Search (name, plate, camera)…",
+      "camerasTitle": "Cameras",
+      "camerasAll": "All cameras",
+      "camerasSelected_one": "{{count}} camera",
+      "camerasSelected_other": "{{count}} cameras",
+      "type": {
+        "face": "Faces",
+        "plate": "Plates",
+        "other": "Other"
+      },
+      "status": {
+        "all": "All",
+        "whitelist": "Whitelist",
+        "blacklist": "Blacklist",
+        "none": "None"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "refresh": {
+        "title": "Refresh",
+        "auto": "Auto refresh",
+        "interval": "Interval",
+        "intervalValue": "{{ms}} ms"
+      },
+      "display": {
+        "title": "Display",
+        "autoScroll": "Auto scroll (stay on newest)",
+        "soundOnBlacklist": "Sound on blacklist",
+        "imageMode": "Image source",
+        "imageModeValue": {
+          "auto": "Auto",
+          "thumbnail": "Thumbnail",
+          "snapshot": "Snapshot",
+          "off": "Off"
+        },
+        "limit": "Items to show"
+      }
+    },
     "type": {
       "plate": "plate",
       "face": "face",
