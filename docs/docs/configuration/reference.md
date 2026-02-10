@@ -672,6 +672,10 @@ lpr:
   match_distance: 1
   # Optional: Known plates to track (strings or regular expressions) (default: shown below)
   known_plates: {}
+  # Optional: Whitelist plates to track (strings or regular expressions) (default: shown below)
+  whitelist_plates: {}
+  # Optional: Blacklist plates to track (strings or regular expressions) (default: shown below)
+  blacklist_plates: {}
   # Optional: Enhance the detected plate image with contrast adjustment and denoising (default: shown below)
   # A value between 0 and 10. Higher values are not always better and may perform worse than lower values.
   enhancement: 0

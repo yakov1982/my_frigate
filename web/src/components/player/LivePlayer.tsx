@@ -375,17 +375,45 @@ export default function LivePlayer({
                   {formatList(
                     [
                       ...new Set([
-                        ...(objects || []).map(({ label, sub_label }) =>
-                          label.endsWith("verified")
-                            ? sub_label
-                            : label.replaceAll("_", " "),
+                        ...(objects || []).map(
+                          ({
+                            label,
+                            sub_label,
+                            recognized_license_plate,
+                            license_plate_status,
+                            license_plate_status_label,
+                          }) => {
+                            const resolvedLabel = label.endsWith("verified")
+                              ? sub_label
+                              : label.replaceAll("_", " ");
+                            const translatedLabel = getTranslatedLabel(
+                              (resolvedLabel || label).replace("-verified", ""),
+                            );
+
+                            const details = [translatedLabel];
+
+                            if (recognized_license_plate) {
+                              details.push(recognized_license_plate);
+                            }
+
+                            if (
+                              license_plate_status &&
+                              license_plate_status !== "none"
+                            ) {
+                              const statusText = license_plate_status.toUpperCase();
+                              details.push(
+                                license_plate_status_label
+                                  ? `${statusText}: ${license_plate_status_label}`
+                                  : statusText,
+                              );
+                            }
+
+                            return details.join(" · ");
+                          },
                         ),
                       ]),
                     ]
-                      .filter((label) => label?.includes("-verified") == false)
-                      .map((label) =>
-                        getTranslatedLabel(label.replace("-verified", "")),
-                      )
+                      .filter((label) => label)
                       .sort(),
                   )}
                 </TooltipContent>

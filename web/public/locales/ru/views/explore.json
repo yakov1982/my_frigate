@@ -82,6 +82,10 @@
       "desc": "Введите новое значение номерного знака для {{label}}"
     },
     "recognizedLicensePlate": "Распознанный номерной знак",
+    "licensePlateStatus": {
+      "whitelist": "Белый список",
+      "blacklist": "Чёрный список"
+    },
     "objects": "Объекты",
     "camera": "Камера",
     "zones": "Зоны",

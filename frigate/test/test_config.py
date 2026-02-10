@@ -1,5 +1,6 @@
 import json
 import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -8,9 +9,25 @@ from pydantic import ValidationError
 from ruamel.yaml.constructor import DuplicateKeyError
 
 from frigate.config import BirdseyeModeEnum, FrigateConfig
-from frigate.const import MODEL_CACHE_DIR
+from frigate.const import MODEL_CACHE_DIR as DEFAULT_MODEL_CACHE_DIR
 from frigate.detectors import DetectorTypeEnum
 from frigate.util.builtin import deep_merge
+
+
+def _resolve_model_cache_dir() -> str:
+    if os.path.exists(DEFAULT_MODEL_CACHE_DIR) or os.path.islink(DEFAULT_MODEL_CACHE_DIR):
+        return DEFAULT_MODEL_CACHE_DIR
+
+    try:
+        os.makedirs(DEFAULT_MODEL_CACHE_DIR, exist_ok=True)
+        return DEFAULT_MODEL_CACHE_DIR
+    except PermissionError:
+        fallback_dir = os.path.join(tempfile.gettempdir(), "frigate-model-cache")
+        os.makedirs(fallback_dir, exist_ok=True)
+        return fallback_dir
+
+
+MODEL_CACHE_DIR = _resolve_model_cache_dir()
 
 
 class TestConfig(unittest.TestCase):
@@ -59,14 +76,32 @@ class TestConfig(unittest.TestCase):
             },
         }
 
-        if not os.path.exists(MODEL_CACHE_DIR) and not os.path.islink(MODEL_CACHE_DIR):
-            os.makedirs(MODEL_CACHE_DIR)
-
     def test_config_class(self):
         frigate_config = FrigateConfig(**self.minimal)
         assert "cpu" in frigate_config.detectors.keys()
         assert frigate_config.detectors["cpu"].type == DetectorTypeEnum.cpu
         assert frigate_config.detectors["cpu"].model.width == 320
+
+    def test_lpr_white_and_black_lists(self):
+        labelmap_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "labelmap.txt")
+        )
+        config = deep_merge(
+            {
+                "model": {"labelmap_path": labelmap_path},
+                "detectors": {"zmq": {"type": "zmq"}},
+                "lpr": {
+                    "enabled": True,
+                    "whitelist_plates": {"Residents": ["ABC1234"]},
+                    "blacklist_plates": {"Watchlist": ["BAD-[0-9]{3}"]},
+                }
+            },
+            self.minimal,
+        )
+
+        frigate_config = FrigateConfig(**config)
+        assert frigate_config.lpr.whitelist_plates["Residents"] == ["ABC1234"]
+        assert frigate_config.lpr.blacklist_plates["Watchlist"] == ["BAD-[0-9]{3}"]
 
     @patch("frigate.detectors.detector_config.load_labels")
     def test_detector_custom_model_path(self, mock_labels):

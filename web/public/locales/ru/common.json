@@ -236,6 +236,7 @@
       "label": "Документация по Frigate"
     },
     "explore": "Поиск событий",
+    "recognitions": "Распознавания",
     "restart": "Перезапуск Frigate",
     "live": {
       "title": "Прямой эфир",
@@ -261,6 +262,66 @@
     },
     "appearance": "Внешний вид",
     "classification": "Распознование"
+  },
+  "recognitions": {
+    "title": "Распознавания",
+    "empty": "Пока нет распознанных объектов.",
+    "failedToLoad": "Не удалось загрузить распознавания.",
+    "noPhoto": "Нет фото",
+    "actions": {
+      "refresh": "Обновить",
+      "jumpToTop": "Вверх",
+      "openInExplore": "Открыть в поиске",
+      "openSnapshot": "Открыть снимок",
+      "openClip": "Открыть клип"
+    },
+    "filters": {
+      "searchPlaceholder": "Поиск (имя, номер, камера)…",
+      "camerasTitle": "Камеры",
+      "camerasAll": "Все камеры",
+      "camerasSelected_one": "{{count}} камера",
+      "camerasSelected_few": "{{count}} камеры",
+      "camerasSelected_many": "{{count}} камер",
+      "camerasSelected_other": "{{count}} камеры",
+      "type": {
+        "face": "Лица",
+        "plate": "Номера",
+        "other": "Другое"
+      },
+      "status": {
+        "all": "Все",
+        "whitelist": "Белый список",
+        "blacklist": "Чёрный список",
+        "none": "Нет"
+      }
+    },
+    "settings": {
+      "title": "Настройки",
+      "refresh": {
+        "title": "Обновление",
+        "auto": "Автообновление",
+        "interval": "Интервал",
+        "intervalValue": "{{ms}} мс"
+      },
+      "display": {
+        "title": "Отображение",
+        "autoScroll": "Автопрокрутка (всегда новые)",
+        "soundOnBlacklist": "Звук при чёрном списке",
+        "imageMode": "Источник изображения",
+        "imageModeValue": {
+          "auto": "Авто",
+          "thumbnail": "Миниатюра",
+          "snapshot": "Снимок",
+          "off": "Выключено"
+        },
+        "limit": "Количество элементов"
+      }
+    },
+    "type": {
+      "plate": "номер",
+      "face": "лицо",
+      "other": "распознано"
+    }
   },
   "pagination": {
     "label": "пагинация",

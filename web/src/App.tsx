@@ -25,6 +25,7 @@ const ConfigEditor = lazy(() => import("@/pages/ConfigEditor"));
 const System = lazy(() => import("@/pages/System"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const UIPlayground = lazy(() => import("@/pages/UIPlayground"));
+const Recognitions = lazy(() => import("@/pages/Recognitions"));
 const FaceLibrary = lazy(() => import("@/pages/FaceLibrary"));
 const Classification = lazy(() => import("@/pages/ClassificationModel"));
 const Logs = lazy(() => import("@/pages/Logs"));
@@ -97,6 +98,7 @@ function DefaultAppView() {
               <Route index element={<Live />} />
               <Route path="/review" element={<Events />} />
               <Route path="/explore" element={<Explore />} />
+              <Route path="/recognitions" element={<Recognitions />} />
               <Route path="/export" element={<Exports />} />
               <Route path="/settings" element={<Settings />} />
             </Route>

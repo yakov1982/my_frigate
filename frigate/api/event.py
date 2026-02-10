@@ -358,6 +358,84 @@ def events(
 
 
 @router.get(
+    "/events/recognitions",
+    dependencies=[Depends(allow_any_authenticated())],
+    summary="Get recent recognized objects",
+    description=(
+        "Returns a list of the most recent events where a recognition was applied, "
+        "such as a face sub_label or a recognized license plate."
+    ),
+)
+def events_recognitions(
+    limit: int = 50,
+    cameras: str = "all",
+    after: float | None = None,
+    before: float | None = None,
+    allowed_cameras: List[str] = Depends(get_allowed_cameras_for_filter),
+):
+    clauses = []
+
+    if cameras != "all":
+        requested = set(cameras.split(","))
+        filtered = requested.intersection(allowed_cameras)
+        if not filtered:
+            return JSONResponse(content=[])
+        camera_list = list(filtered)
+    else:
+        camera_list = allowed_cameras
+
+    clauses.append((Event.camera << camera_list))
+
+    # Only events that have either a sub label (ex: face recognition) or
+    # a recognized license plate stored in event data.
+    clauses.append(
+        reduce(
+            operator.or_,
+            [
+                Event.sub_label.is_null(False),
+                Event.data["recognized_license_plate"].is_null(False),
+            ],
+        )
+    )
+
+    if after:
+        clauses.append((Event.start_time > after))
+
+    if before:
+        clauses.append((Event.start_time < before))
+
+    selected_columns = [
+        Event.id,
+        Event.camera,
+        Event.label,
+        Event.sub_label,
+        Event.zones,
+        Event.start_time,
+        Event.end_time,
+        Event.has_clip,
+        Event.has_snapshot,
+        Event.retain_indefinitely,
+        Event.plus_id,
+        Event.model_hash,
+        Event.detector_type,
+        Event.model_type,
+        Event.false_positive,
+        Event.data,
+    ]
+
+    events = (
+        Event.select(*selected_columns)
+        .where(reduce(operator.and_, clauses))
+        .order_by(Event.start_time.desc())
+        .limit(limit)
+        .dicts()
+        .iterator()
+    )
+
+    return JSONResponse(content=list(events))
+
+
+@router.get(
     "/events/explore",
     response_model=list[EventResponse],
     dependencies=[Depends(allow_any_authenticated())],
@@ -434,6 +512,10 @@ def events_explore(
                         "path_data",
                         "recognized_license_plate",
                         "recognized_license_plate_score",
+                        "license_plate_status",
+                        "license_plate_status_score",
+                        "license_plate_status_label",
+                        "license_plate_status_label_score",
                     ]
                 },
                 "event_count": label_counts[event.label],
@@ -820,6 +902,10 @@ def events_search(
                 "path_data",
                 "recognized_license_plate",
                 "recognized_license_plate_score",
+                "license_plate_status",
+                "license_plate_status_score",
+                "license_plate_status_label",
+                "license_plate_status_label_score",
             ]
         }
 

@@ -153,6 +153,8 @@ Message published for updates to tracked object metadata, for example:
   "id": "1607123955.475377-mxklsc",
   "name": "John's Car",
   "plate": "123ABC",
+  "plate_status": "blacklist",
+  "plate_status_label": "Watchlist",
   "score": 0.95,
   "camera": "driveway_cam",
   "timestamp": 1607123958.748393

@@ -277,6 +277,13 @@ export function TrackingDetails({
   const label = event.sub_label
     ? event.sub_label
     : getTranslatedLabel(event.label, event.data.type);
+  const licensePlateStatusText =
+    event.data?.license_plate_status &&
+    event.data.license_plate_status !== "none"
+      ? event.data?.license_plate_status_label
+        ? `${t(`details.licensePlateStatus.${event.data.license_plate_status}`)}: ${event.data.license_plate_status_label}`
+        : t(`details.licensePlateStatus.${event.data.license_plate_status}`)
+      : null;
 
   const getZoneColor = useCallback(
     (zoneName: string) => {
@@ -703,6 +710,19 @@ export function TrackingDetails({
                           {event.data.recognized_license_plate}
                         </Link>
                       </div>
+                      {licensePlateStatusText && (
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] uppercase tracking-wide",
+                            event.data.license_plate_status === "blacklist"
+                              ? "border-danger text-danger"
+                              : "border-success text-success",
+                          )}
+                        >
+                          {licensePlateStatusText}
+                        </Badge>
+                      )}
                     </>
                   )}
                 </div>

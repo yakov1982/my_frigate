@@ -86,6 +86,28 @@ export function useCameraActivity(
     [objects],
   );
 
+  const getTupleValue = useCallback(
+    (
+      value:
+        | string
+        | [string, number]
+        | null
+        | undefined
+        | [string | null, number | null],
+    ) => {
+      if (!value) {
+        return "";
+      }
+
+      if (Array.isArray(value)) {
+        return value[0] ?? "";
+      }
+
+      return value;
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!updatedEvent) {
       return;
@@ -115,7 +137,15 @@ export function useCameraActivity(
             area: updatedEvent.after.area,
             ratio: updatedEvent.after.ratio,
             score: updatedEvent.after.score,
-            sub_label: updatedEvent.after.sub_label?.[0] ?? "",
+            sub_label: getTupleValue(updatedEvent.after.sub_label),
+            recognized_license_plate:
+              getTupleValue(updatedEvent.after.recognized_license_plate) ||
+              undefined,
+            license_plate_status:
+              getTupleValue(updatedEvent.after.license_plate_status) || undefined,
+            license_plate_status_label:
+              getTupleValue(updatedEvent.after.license_plate_status_label) ||
+              undefined,
           };
           newObjects = [...(objects ?? []), newActiveObject];
         }
@@ -137,11 +167,28 @@ export function useCameraActivity(
         newObjects[updatedEventIndex].label = label;
         newObjects[updatedEventIndex].stationary =
           updatedEvent.after.stationary;
+        newObjects[updatedEventIndex].sub_label = getTupleValue(
+          updatedEvent.after.sub_label,
+        );
+        newObjects[updatedEventIndex].recognized_license_plate =
+          getTupleValue(updatedEvent.after.recognized_license_plate) || undefined;
+        newObjects[updatedEventIndex].license_plate_status =
+          getTupleValue(updatedEvent.after.license_plate_status) || undefined;
+        newObjects[updatedEventIndex].license_plate_status_label =
+          getTupleValue(updatedEvent.after.license_plate_status_label) ||
+          undefined;
       }
     }
 
     handleSetObjects(newObjects);
-  }, [attributeLabels, camera, updatedEvent, objects, handleSetObjects]);
+  }, [
+    attributeLabels,
+    camera,
+    getTupleValue,
+    updatedEvent,
+    objects,
+    handleSetObjects,
+  ]);
 
   // determine if camera is offline
 
