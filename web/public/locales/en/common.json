@@ -241,6 +241,7 @@
     },
     "review": "Review",
     "explore": "Explore",
+    "recognitions": "Recognitions",
     "export": "Export",
     "uiPlayground": "UI Playground",
     "faceLibrary": "Face Library",
@@ -252,6 +253,17 @@
       "anonymous": "anonymous",
       "logout": "Logout",
       "setPassword": "Set Password"
+    }
+  },
+  "recognitions": {
+    "title": "Recognitions",
+    "empty": "No recognized objects yet.",
+    "failedToLoad": "Failed to load recognitions.",
+    "noPhoto": "No photo",
+    "type": {
+      "plate": "plate",
+      "face": "face",
+      "other": "recognized"
     }
   },
   "toast": {

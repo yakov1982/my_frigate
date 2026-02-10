@@ -236,6 +236,7 @@
       "label": "Документация по Frigate"
     },
     "explore": "Поиск событий",
+    "recognitions": "Распознавания",
     "restart": "Перезапуск Frigate",
     "live": {
       "title": "Прямой эфир",
@@ -261,6 +262,17 @@
     },
     "appearance": "Внешний вид",
     "classification": "Распознование"
+  },
+  "recognitions": {
+    "title": "Распознавания",
+    "empty": "Пока нет распознанных объектов.",
+    "failedToLoad": "Не удалось загрузить распознавания.",
+    "noPhoto": "Нет фото",
+    "type": {
+      "plate": "номер",
+      "face": "лицо",
+      "other": "распознано"
+    }
   },
   "pagination": {
     "label": "пагинация",
