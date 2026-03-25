@@ -20,6 +20,7 @@ const sidebars: SidebarsConfig = {
       "guides/ha_notifications",
       "guides/ha_network_storage",
       "guides/reverse_proxy",
+      "guides/jetson_nano_setup",
     ],
     Configuration: {
       "Configuration Files": [
