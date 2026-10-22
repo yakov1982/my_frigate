@@ -51,8 +51,8 @@ class AuthState:
         self.challenges: dict[str, Challenge] = {}
 
     def issue_challenge(self, username: str) -> dict[str, Any]:
-        cert_path = self.registry_dir / f"{username}.cert.pem"
-        if not cert_path.exists():
+        pubkey_path = self.registry_dir / f"{username}.pub.pem"
+        if not pubkey_path.exists():
             raise KeyError(f"user '{username}' is not enrolled")
 
         challenge_id = secrets.token_hex(16)
@@ -76,9 +76,9 @@ class AuthState:
         if time.time() > challenge.expires_at:
             raise ValueError("challenge expired")
 
-        cert_path = self.registry_dir / f"{challenge.username}.cert.pem"
+        pubkey_path = self.registry_dir / f"{challenge.username}.pub.pem"
         signature = base64.b64decode(signature_b64.encode("ascii"))
-        valid = self._verify_signature(cert_path, challenge.nonce, signature)
+        valid = self._verify_signature(pubkey_path, challenge.nonce, signature)
         if not valid:
             raise ValueError("signature verification failed")
 
@@ -123,36 +123,17 @@ class AuthState:
         return payload
 
     @staticmethod
-    def _verify_signature(cert_path: Path, message: bytes, signature: bytes) -> bool:
-        if not cert_path.exists():
+    def _verify_signature(pubkey_path: Path, message: bytes, signature: bytes) -> bool:
+        if not pubkey_path.exists():
             return False
 
         with tempfile.TemporaryDirectory(prefix="usb-auth-verify-") as tmp:
             tmp_dir = Path(tmp)
             message_path = tmp_dir / "message.bin"
             signature_path = tmp_dir / "signature.bin"
-            pubkey_path = tmp_dir / "pubkey.pem"
 
             message_path.write_bytes(message)
             signature_path.write_bytes(signature)
-
-            extract_pubkey = subprocess.run(
-                [
-                    "openssl",
-                    "x509",
-                    "-in",
-                    str(cert_path),
-                    "-pubkey",
-                    "-noout",
-                    "-out",
-                    str(pubkey_path),
-                ],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            if extract_pubkey.returncode != 0:
-                return False
 
             verify_cmd = subprocess.run(
                 [
